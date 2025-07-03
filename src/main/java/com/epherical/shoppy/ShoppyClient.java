@@ -16,36 +16,43 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import static com.epherical.shoppy.Shoppy.MODID;
 import static com.epherical.shoppy.client.ShoppyClient.tick;
 
-@EventBusSubscriber(modid = MODID, value = Dist.CLIENT)
 public class ShoppyClient {
 
-
-    @SubscribeEvent
-    public static void clientSetup(FMLClientSetupEvent event) {
-        ItemBlockRenderTypes.setRenderLayer(Shoppy.BARTERING_STATION.get(), RenderType.cutout());
-        ItemBlockRenderTypes.setRenderLayer(Shoppy.CREATIVE_BARTERING_STATION.get(), RenderType.cutout());
-    }
+    @EventBusSubscriber(modid = MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
+    public static class BusEvents {
 
 
-    @SubscribeEvent
-    public static void registerScreen(RegisterMenuScreensEvent event) {
-        event.register(Shoppy.BARTERING_MENU.get(), BarteringScreen::new);
-        event.register(Shoppy.BARTERING_MENU_OWNER.get(), BarteringScreenOwner::new);
-    }
-
-
-    @SubscribeEvent
-    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerBlockEntityRenderer(Shoppy.BARTERING_STATION_ENTITY.get(), BarteringBlockRenderer::new);
-        event.registerBlockEntityRenderer(Shoppy.CREATIVE_BARTERING_STATION_ENTITY.get(), BarteringBlockRenderer::new);
-    }
-
-
-    @SubscribeEvent
-    public static void onEndTick(ClientTickEvent.Post event) {
-        tick++;
-        if (tick == Integer.MAX_VALUE) {
-            tick = Integer.MIN_VALUE;
+        @SubscribeEvent
+        public static void onEndTick(ClientTickEvent.Post event) {
+            tick++;
+            if (tick == Integer.MAX_VALUE) {
+                tick = Integer.MIN_VALUE;
+            }
         }
+
+    }
+
+
+    @EventBusSubscriber(modid = MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
+    public static class GameEvents {
+        @SubscribeEvent
+        public static void clientSetup(FMLClientSetupEvent event) {
+            ItemBlockRenderTypes.setRenderLayer(Shoppy.BARTERING_STATION.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(Shoppy.CREATIVE_BARTERING_STATION.get(), RenderType.cutout());
+        }
+
+        @SubscribeEvent
+        public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+            event.registerBlockEntityRenderer(Shoppy.BARTERING_STATION_ENTITY.get(), BarteringBlockRenderer::new);
+            event.registerBlockEntityRenderer(Shoppy.CREATIVE_BARTERING_STATION_ENTITY.get(), BarteringBlockRenderer::new);
+        }
+
+
+        @SubscribeEvent
+        public static void registerScreen(RegisterMenuScreensEvent event) {
+            event.register(Shoppy.BARTERING_MENU.get(), BarteringScreen::new);
+            event.register(Shoppy.BARTERING_MENU_OWNER.get(), BarteringScreenOwner::new);
+        }
+
     }
 }

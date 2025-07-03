@@ -27,8 +27,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-import static com.epherical.shoppy.menu.bartering.BarteringMenu.CURRENCY_STORED;
-import static com.epherical.shoppy.menu.bartering.BarteringMenu.SELLING_STORED;
 import static com.epherical.shoppy.menu.bartering.BarteringMenuOwner.*;
 
 public class BarteringBlockEntity extends AbstractTradingBlockEntity {
@@ -98,7 +96,7 @@ public class BarteringBlockEntity extends AbstractTradingBlockEntity {
 
     @Override
     protected NonNullList<ItemStack> getItems() {
-        return null;
+        return NonNullList.of(ItemStack.EMPTY, ItemStack.EMPTY);
     }
 
     @Override
@@ -380,7 +378,7 @@ public class BarteringBlockEntity extends AbstractTradingBlockEntity {
         int take;
         ItemStack item;
 
-        if (pSlot == CURRENCY_STORED) {
+        /*if (pSlot == CURRENCY_STORED) {
             take = currencyStored;
             item = getCurrency().copy();
         } else if (pSlot == SELLING_STORED) {
@@ -402,8 +400,8 @@ public class BarteringBlockEntity extends AbstractTradingBlockEntity {
         } else {
             return ItemStack.EMPTY;
         }
-        item.setCount(take);
-        return item;
+        item.setCount(take);*/
+        return null;
     }
 
     /**
@@ -413,14 +411,7 @@ public class BarteringBlockEntity extends AbstractTradingBlockEntity {
      */
     @Override
     public ItemStack removeItem(int slot, int amountToRemove) {
-        ItemStack item = getItem(slot);
-        if (slot == CURRENCY_STORED) {
-            currencyStored -= amountToRemove;
-        } else if (slot == SELLING_STORED) {
-            storedSellingItems -= amountToRemove;
-        }
-        markUpdated();
-        return item.split(amountToRemove);
+        return null;
     }
 
     @Override
@@ -430,13 +421,6 @@ public class BarteringBlockEntity extends AbstractTradingBlockEntity {
 
     @Override
     public void setItem(int slot, ItemStack stack) {
-        if (slot == CURRENCY_ITEM) {
-            currency = stack;
-        } else if (slot == SOLD_ITEMS) {
-            selling = stack;
-        } else if (slot == SELLING_STORED || slot == 4) {
-            storedSellingItems += stack.getCount();
-        }
 
         markUpdated();
     }

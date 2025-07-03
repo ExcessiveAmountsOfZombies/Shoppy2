@@ -30,41 +30,4 @@ public class BarteringMenuOwner extends BarteringMenu {
     public static BarteringMenuOwner realContainer(int pContainerId, Inventory playerInventory, Container container, ContainerData containerData) {
         return new BarteringMenuOwner(Shoppy.BARTERING_MENU_OWNER.get(), pContainerId, playerInventory, container, containerData);
     }
-
-    @Override
-    protected void addSlots() {
-        super.addSlots();
-        this.addSlot(new Slot(container, CURRENCY_ITEM, 71, 32) {
-            @Override
-            public boolean mayPickup(@NotNull Player player) {
-                if (getContainerData().get(2) <= 0) {
-                    set(ItemStack.EMPTY);
-                }
-                return false;
-            }
-
-            @Override
-            public boolean mayPlace(@NotNull ItemStack item) {
-                set(item.copy());
-                setChanged();
-                return false;
-            }
-        });
-        this.addSlot(new Slot(container, SOLD_ITEMS, 89, 32) {
-            @Override
-            public boolean mayPickup(@NotNull Player player) {
-                if (getContainerData().get(3) <= 0) {
-                    set(ItemStack.EMPTY);
-                }
-                return false;
-            }
-
-            @Override
-            public boolean mayPlace(@NotNull ItemStack item) {
-                set(item.copy());
-                setChanged();
-                return false;
-            }
-        });
-    }
 }
