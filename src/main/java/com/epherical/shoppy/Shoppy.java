@@ -1,0 +1,150 @@
+package com.epherical.shoppy;
+
+import com.epherical.shoppy.block.BarteringBlock;
+import com.epherical.shoppy.block.CreativeBarteringBlock;
+import com.epherical.shoppy.block.entity.AbstractTradingBlockEntity;
+import com.epherical.shoppy.block.entity.BarteringBlockEntity;
+import com.epherical.shoppy.block.entity.CreativeBarteringBlockEntity;
+import com.epherical.shoppy.menu.bartering.BarteringMenu;
+import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
+import com.mojang.logging.LogUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.registries.DeferredBlock;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredItem;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.server.permission.PermissionAPI;
+import net.neoforged.neoforge.server.permission.events.PermissionGatherEvent;
+import net.neoforged.neoforge.server.permission.nodes.PermissionNode;
+import net.neoforged.neoforge.server.permission.nodes.PermissionTypes;
+import org.slf4j.Logger;
+
+import java.util.function.Supplier;
+
+// The value here should match an entry in the META-INF/neoforge.mods.toml file
+@Mod(Shoppy.MODID)
+public class Shoppy {
+    public static final String MODID = "shoppy";
+    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MODID);
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
+    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
+    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
+    public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, MODID);
+
+    public static final DeferredBlock<BarteringBlock> BARTERING_STATION = BLOCKS.register("bartering_station",
+            () -> new BarteringBlock(BlockBehaviour.Properties.of().strength(2.5F, 1200F).sound(SoundType.WOOD).noOcclusion()));
+
+    public static final DeferredItem<BlockItem> BARTERING_STATION_ITEM = ITEMS.registerSimpleBlockItem(BARTERING_STATION);
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<BarteringBlockEntity>> BARTERING_STATION_ENTITY =
+            BLOCK_ENTITIES.register("bartering_station", () ->
+                    BlockEntityType.Builder.of(BarteringBlockEntity::new, BARTERING_STATION.get()).build(null));
+
+
+
+    public static final DeferredBlock<CreativeBarteringBlock> CREATIVE_BARTERING_STATION = BLOCKS.register("creative_bartering_station",
+            () -> new CreativeBarteringBlock(BlockBehaviour.Properties.of().strength(2.5F, 1200F).sound(SoundType.WOOD).noOcclusion()));
+
+    public static final DeferredItem<BlockItem> CREATIVE_BARTERING_STATION_ITEM = ITEMS.registerSimpleBlockItem(CREATIVE_BARTERING_STATION);
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CreativeBarteringBlockEntity>> CREATIVE_BARTERING_STATION_ENTITY =
+            BLOCK_ENTITIES.register("creative_bartering_station", () ->
+                    BlockEntityType.Builder.of(CreativeBarteringBlockEntity::new, CREATIVE_BARTERING_STATION.get()).build(null));
+
+
+
+    public static final DeferredHolder<MenuType<?>, MenuType<BarteringMenu>> BARTERING_MENU =
+            MENU_TYPES.register("bartering_menu", () -> new MenuType<>(BarteringMenu::new, FeatureFlags.VANILLA_SET));
+
+    public static DeferredHolder<MenuType<?>, MenuType<BarteringMenuOwner>> BARTERING_MENU_OWNER =
+            MENU_TYPES.register("bartering_menu_owner", () -> new MenuType<>(BarteringMenuOwner::new, FeatureFlags.VANILLA_SET));
+
+    public static final PermissionNode<Boolean> ADMIN_BREAK = new PermissionNode<>("shoppy", "admin.break_shop", PermissionTypes.BOOLEAN, (player, playerUUID, context) -> {
+        return player != null && player.hasPermissions(4);
+    });
+
+
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () ->
+            CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.shoppy"))
+                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .icon(() -> BARTERING_STATION_ITEM.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+        output.accept(BARTERING_STATION.get());
+        output.accept(CREATIVE_BARTERING_STATION_ITEM.get());
+    }).build());
+
+
+
+    public Shoppy(IEventBus modEventBus, ModContainer modContainer) {
+        modEventBus.addListener(this::commonSetup);
+        BLOCKS.register(modEventBus);
+        ITEMS.register(modEventBus);
+        CREATIVE_MODE_TABS.register(modEventBus);
+        BLOCK_ENTITIES.register(modEventBus);
+        MENU_TYPES.register(modEventBus);
+
+        NeoForge.EVENT_BUS.register(this);
+    }
+
+    private void commonSetup(final FMLCommonSetupEvent event) {
+
+    }
+
+    @SubscribeEvent
+    public void onServerStarting(ServerStartingEvent event) {
+
+    }
+
+
+    @SubscribeEvent
+    public void registerPermissions(PermissionGatherEvent.Nodes event) {
+        event.addNodes(ADMIN_BREAK);
+    }
+
+    @SubscribeEvent
+    public void onPlayerInteract(PlayerInteractEvent.LeftClickBlock event) {
+        if (FMLEnvironment.dist.isDedicatedServer()) {
+            Player player = event.getEntity();
+            BlockPos pos = event.getPos();
+            ServerLevel level = (ServerLevel) event.getEntity().level();
+            BlockEntity entity = level.getBlockEntity(pos);
+            if (entity instanceof AbstractTradingBlockEntity trading) {
+                if ((!trading.getOwner().equals(player.getUUID())) && (!player.hasPermissions(4) || PermissionAPI.getPermission((ServerPlayer) player, ADMIN_BREAK))) {
+                    event.setCanceled(true);
+                }
+            }
+        }
+    }
+
+    // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
+
+}
