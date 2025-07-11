@@ -37,14 +37,14 @@ public class BarteringBlockRenderer<T extends BarteringBlockEntity> implements B
     public void render(T blockEntity, float f, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, int j) {
         Direction direction = blockEntity.getBlockState().getValue(AbstractTradingBlock.FACING);
         if (sellingItem == null) {
-            sellingItem = new ItemEntity(blockEntity.getLevel(), blockEntity.getBlockPos().getX(), blockEntity.getBlockPos().getY(), blockEntity.getBlockPos().getZ(), blockEntity.getSelling());
+            //sellingItem = new ItemEntity(blockEntity.getLevel(), blockEntity.getBlockPos().getX(), blockEntity.getBlockPos().getY(), blockEntity.getBlockPos().getZ(), blockEntity.getSelling());
         }
         int k = (int) blockEntity.getBlockPos().asLong();
         poseStack.pushPose();
         poseStack.translate(0.5D, 0.55D, 0.5D);
         poseStack.mulPose(Axis.YP.rotationDegrees(-direction.toYRot()));
         poseStack.scale(0.60F, 0.60F, 0.60F);
-        sellingItem.setItem(blockEntity.getSelling());
+        //sellingItem.setItem(blockEntity.getSelling());
         if (sellingItem != null) {
             customRenderer.render(sellingItem, f, ShoppyClient.tick, poseStack, multiBufferSource, i);
         }
@@ -54,7 +54,7 @@ public class BarteringBlockRenderer<T extends BarteringBlockEntity> implements B
         poseStack.mulPose(Axis.XP.rotation(22.4f));
         poseStack.mulPose(Axis.ZP.rotation(22f));
         poseStack.scale(0.375F, 0.375F, 0.09F);
-        renderer.renderStatic(blockEntity.getCurrency(), ItemDisplayContext.GUI, i, j, poseStack, multiBufferSource, null, k);
+        //renderer.renderStatic(blockEntity.getCurrency(), ItemDisplayContext.GUI, i, j, poseStack, multiBufferSource, null, k);
 
         poseStack.pushPose();
         poseStack.translate(-2.0d, 1.3d, 0.4d);
@@ -62,11 +62,11 @@ public class BarteringBlockRenderer<T extends BarteringBlockEntity> implements B
         poseStack.mulPose(Axis.XP.rotation(22.4f));
         poseStack.mulPose(Axis.ZP.rotation(22f));
 
-        this.font.drawInBatch("Selling x" + blockEntity.getSelling().getCount(), 0, 0, 0, false, poseStack.last().pose(), multiBufferSource, Font.DisplayMode.NORMAL, 0, i);
+        //this.font.drawInBatch("Selling x" + blockEntity.getSelling().getCount(), 0, 0, 0, false, poseStack.last().pose(), multiBufferSource, Font.DisplayMode.NORMAL, 0, i);
         this.font.drawInBatch("for", 20, 14, 0, false, poseStack.last().pose(), multiBufferSource, Font.DisplayMode.NORMAL, 0, i);
-        String money = "" + blockEntity.getCurrency().getCount();
-        int width = this.font.width(money);
-        this.font.drawInBatch(money, 26 - (width / 2.0f), 32, 0, false, poseStack.last().pose(), multiBufferSource, Font.DisplayMode.NORMAL, 0, i);
+        //String money = "" + blockEntity.getCurrency().getCount();
+        //int width = this.font.width(money);
+        //this.font.drawInBatch(money, 26 - (width / 2.0f), 32, 0, false, poseStack.last().pose(), multiBufferSource, Font.DisplayMode.NORMAL, 0, i);
 
         poseStack.popPose();
         poseStack.popPose();

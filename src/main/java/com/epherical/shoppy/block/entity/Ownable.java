@@ -2,7 +2,7 @@ package com.epherical.shoppy.block.entity;
 
 import java.util.UUID;
 
-public interface CreativeBlock {
+public interface Ownable {
 
     void setOwner(UUID owner);
 

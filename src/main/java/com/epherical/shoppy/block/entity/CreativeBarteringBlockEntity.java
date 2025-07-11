@@ -1,48 +1,36 @@
 package com.epherical.shoppy.block.entity;
 
 import com.epherical.shoppy.Shoppy;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.NonNullList;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
+import org.jetbrains.annotations.Nullable;
 
-public class CreativeBarteringBlockEntity extends BarteringBlockEntity implements CreativeBlock {
+import java.util.UUID;
+
+public class CreativeBarteringBlockEntity extends BarteringBlockEntity implements Ownable {
 
 
     public CreativeBarteringBlockEntity(BlockPos blockPos, BlockState blockState) {
         super(Shoppy.CREATIVE_BARTERING_STATION_ENTITY.get(), blockPos, blockState);
-        this.currencyStored = maxStorage;
-        this.storedSellingItems = maxStorage;
     }
 
     @Override
-    public void clearContent() {
-        super.clearContent();
-        this.currencyStored = maxStorage;
-        this.storedSellingItems = maxStorage;
+    protected @Nullable Component getDefaultName() {
+        return Component.translatable("block.shoppy.creative_bartering_station").setStyle(Style.EMPTY.withColor(ChatFormatting.WHITE));
+    }
+
+
+
+    @Override
+    public void setOwner(UUID owner) {
+
     }
 
     @Override
-    public void clearShop(BlockHitResult result) {
-        super.clearShop(result);
-        this.currencyStored = maxStorage;
-        this.storedSellingItems = maxStorage;
+    public UUID getOwner() {
+        return null;
     }
-
-    @Override
-    public boolean attemptPurchase(Player player, boolean creativeBlock) {
-        boolean value = super.attemptPurchase(player, true);
-        this.currencyStored = maxStorage;
-        this.storedSellingItems = maxStorage;
-        return value;
-    }
-
-    @Override
-    public NonNullList<ItemStack> dropItems() {
-        return NonNullList.create();
-    }
-
-
 }

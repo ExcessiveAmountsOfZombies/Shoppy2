@@ -37,9 +37,9 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         int left = leftPos;
         int top = topPos;
-        graphics.blit(CONTAINER_BACKGROUND, left, top, 0, 0, 176, 147);
-        graphics.drawString(font, "Stored", leftPos + 10, topPos + 50, 0xFFFFFF);
-        graphics.drawString(font, "Stored", leftPos + 132, topPos + 54, 0xFFFFFF);
+        graphics.blit(CONTAINER_BACKGROUND, left, top, 0, 0, 176, 191);
+        //graphics.drawString(font, "Stored", leftPos + 10, topPos + 50, 0xFFFFFF);
+        //graphics.drawString(font, "Stored", leftPos + 132, topPos + 54, 0xFFFFFF);
         //this.blit(pPoseStack, left + 79, top + 34, 0, 126, this.imageWidth, 16);
     }
 }

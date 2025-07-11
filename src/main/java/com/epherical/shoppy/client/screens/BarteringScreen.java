@@ -42,8 +42,8 @@ public class BarteringScreen extends AbstractContainerScreen<BarteringMenu> {
         int left = leftPos;
         int top = topPos;
         graphics.blit(CONTAINER_BACKGROUND, left, top, 0, 0, 176, 147);
-        graphics.drawString(font, "x" + menu.getContainerData().get(0), leftPos + 19, topPos + 22, 0xFFFFFF);
-        graphics.drawString(font, "x" + menu.getContainerData().get(1), leftPos + 143, topPos + 18, 0xFFFFFF);
+        //graphics.drawString(font, "x" + menu.getContainerData().get(0), leftPos + 19, topPos + 22, 0xFFFFFF);
+        //graphics.drawString(font, "x" + menu.getContainerData().get(1), leftPos + 143, topPos + 18, 0xFFFFFF);
         graphics.drawString(font, "for", leftPos + 75, topPos + 28, 0xFFFFFF);
         //this.blit(pPoseStack, left + 79, top + 34, 0, 126, this.imageWidth, 16);
     }

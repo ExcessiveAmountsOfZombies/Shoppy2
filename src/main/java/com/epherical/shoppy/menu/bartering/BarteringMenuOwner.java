@@ -20,7 +20,7 @@ public class BarteringMenuOwner extends BarteringMenu {
 
 
     public BarteringMenuOwner(int pContainerId, Inventory playerInventory) {
-        this(Shoppy.BARTERING_MENU_OWNER.get(), pContainerId, playerInventory, new SimpleContainer(4), new SimpleContainerData(4));
+        this(Shoppy.BARTERING_MENU_OWNER.get(), pContainerId, playerInventory, new SimpleContainer(43), new SimpleContainerData(43));
     }
 
     public BarteringMenuOwner(@Nullable MenuType<?> pMenuType, int pContainerId, Inventory playerInventory, Container container, ContainerData data) {

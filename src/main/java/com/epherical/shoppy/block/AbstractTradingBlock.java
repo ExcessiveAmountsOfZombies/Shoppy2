@@ -1,15 +1,11 @@
 package com.epherical.shoppy.block;
 
-import com.epherical.shoppy.block.entity.AbstractTradingBlockEntity;
+import com.epherical.shoppy.block.entity.BarteringBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.Containers;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.piglin.PiglinAi;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -17,7 +13,6 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.RenderShape;
@@ -71,7 +66,7 @@ public abstract class AbstractTradingBlock extends BaseEntityBlock implements En
             if (menuprovider != null) {
                 player.openMenu(menuprovider);
             }
-            
+
             return InteractionResult.CONSUME;
         }
     }
@@ -117,9 +112,9 @@ public abstract class AbstractTradingBlock extends BaseEntityBlock implements En
     public void onRemove(BlockState blockState, Level level, BlockPos blockPos, BlockState blockState2, boolean bl) {
         if (!blockState.is(blockState2.getBlock())) {
             BlockEntity blockEntity = level.getBlockEntity(blockPos);
-            if (blockEntity instanceof AbstractTradingBlockEntity) {
+            /*if (blockEntity instanceof AbstractTradingBlockEntity) {
                 Containers.dropContents(level, blockPos, ((AbstractTradingBlockEntity) blockEntity).dropItems());
-            }
+            }*/
         }
         super.onRemove(blockState, level, blockPos, blockState2, bl);
     }
@@ -127,7 +122,7 @@ public abstract class AbstractTradingBlock extends BaseEntityBlock implements En
     @Override
     public void setPlacedBy(Level level, BlockPos blockPos, BlockState blockState, @Nullable LivingEntity livingEntity, ItemStack itemStack) {
         if (livingEntity != null) {
-            AbstractTradingBlockEntity shop = (AbstractTradingBlockEntity) level.getBlockEntity(blockPos);
+            BarteringBlockEntity shop = (BarteringBlockEntity) level.getBlockEntity(blockPos);
             shop.setOwner(livingEntity.getUUID());
         }
         super.setPlacedBy(level, blockPos, blockState, livingEntity, itemStack);
