@@ -6,18 +6,21 @@ import com.epherical.shoppy.block.entity.BarteringBlockEntity;
 import com.epherical.shoppy.block.entity.CreativeBarteringBlockEntity;
 import com.epherical.shoppy.menu.bartering.BarteringMenu;
 import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
+import com.epherical.shoppy.network.AddItemRequestPayload;
+import com.epherical.shoppy.network.ServerPayloadHandler;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -28,17 +31,24 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.network.IContainerFactory;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.HandlerThread;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.server.permission.PermissionAPI;
 import net.neoforged.neoforge.server.permission.events.PermissionGatherEvent;
 import net.neoforged.neoforge.server.permission.nodes.PermissionNode;
 import net.neoforged.neoforge.server.permission.nodes.PermissionTypes;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
@@ -75,10 +85,12 @@ public class Shoppy {
 
 
     public static final DeferredHolder<MenuType<?>, MenuType<BarteringMenu>> BARTERING_MENU =
-            MENU_TYPES.register("bartering_menu", () -> new MenuType<>(BarteringMenu::new, FeatureFlags.VANILLA_SET));
+            MENU_TYPES.register("bartering_menu", () -> new MenuType<>(
+                    (IContainerFactory<BarteringMenu>) BarteringMenu::new, FeatureFlags.VANILLA_SET));
 
     public static DeferredHolder<MenuType<?>, MenuType<BarteringMenuOwner>> BARTERING_MENU_OWNER =
-            MENU_TYPES.register("bartering_menu_owner", () -> new MenuType<>(BarteringMenuOwner::new, FeatureFlags.VANILLA_SET));
+            MENU_TYPES.register("bartering_menu_owner", () -> new MenuType<>(
+                    (IContainerFactory<BarteringMenuOwner>) BarteringMenuOwner::new, FeatureFlags.VANILLA_SET));
 
     public static final PermissionNode<Boolean> ADMIN_BREAK = new PermissionNode<>("shoppy", "admin.break_shop", PermissionTypes.BOOLEAN, (player, playerUUID, context) -> {
         return player != null && player.hasPermissions(4);
@@ -99,6 +111,8 @@ public class Shoppy {
 
     public Shoppy(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(this::onCapability);
+        modEventBus.addListener(this::registerNetworkPayloads);
         BLOCKS.register(modEventBus);
         ITEMS.register(modEventBus);
         CREATIVE_MODE_TABS.register(modEventBus);
@@ -110,6 +124,42 @@ public class Shoppy {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
 
+    }
+
+    public void onCapability(RegisterCapabilitiesEvent event) {
+        event.registerBlock(Capabilities.ItemHandler.BLOCK, (level, pos, state, blockEntity, context) -> {
+            BarteringBlockEntity barteringBlockEntity = (BarteringBlockEntity) blockEntity;
+            NonNullList<ItemStack> inventory = barteringBlockEntity.getInventory();
+            return new ItemStackHandler(inventory) {
+                @Override
+                public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+                    return switch (slot) {
+                        case 0 -> ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem());     // only sale item may be inserted
+                        case 1 -> false;                                                               // revenue slot never accepts input
+                        default -> false;
+                    };
+                }
+
+                @Override
+                public ItemStack extractItem(int slot, int amount, boolean simulate) {
+                    // hoppers may ONLY pull from slot 1 (revenue) – block stock theft
+                    return slot == 1 ? super.extractItem(slot, amount, simulate) : ItemStack.EMPTY;
+                }
+
+                @Override
+                public ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
+                    // hoppers may ONLY insert into slot 0
+                    return slot == 0 ? super.insertItem(slot, stack, simulate) : stack;
+                }
+            };
+        }, BARTERING_STATION.get());
+    }
+
+
+    public void registerNetworkPayloads(final RegisterPayloadHandlersEvent event) {
+        final PayloadRegistrar registrar = event.registrar("1")
+                .executesOn(HandlerThread.MAIN);
+        registrar.playToServer(AddItemRequestPayload.TYPE, AddItemRequestPayload.STREAM_CODEC, ServerPayloadHandler::handle);
     }
 
     @SubscribeEvent
@@ -137,7 +187,4 @@ public class Shoppy {
             }*/
         }
     }
-
-    // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
-
 }

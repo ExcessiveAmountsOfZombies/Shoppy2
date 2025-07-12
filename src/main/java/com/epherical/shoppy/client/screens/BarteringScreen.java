@@ -1,5 +1,6 @@
 package com.epherical.shoppy.client.screens;
 
+/* imports trimmed for brevity */
 import com.epherical.shoppy.menu.bartering.BarteringMenu;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,7 +14,7 @@ import static com.epherical.shoppy.Shoppy.MODID;
 public class BarteringScreen extends AbstractContainerScreen<BarteringMenu> {
 
     private static final ResourceLocation CONTAINER_BACKGROUND =
-            ResourceLocation.fromNamespaceAndPath(MODID, "textures/gui/container/bartering_page.png");
+            ResourceLocation.fromNamespaceAndPath(MODID, "textures/gui/sprites/container/bartering_page.png");
 
 
     public BarteringScreen(BarteringMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
@@ -21,12 +22,12 @@ public class BarteringScreen extends AbstractContainerScreen<BarteringMenu> {
         this.inventoryLabelY = -3000;
     }
 
+
     @Override
     protected void init() {
         super.init();
-        /*this.addRenderableWidget(Button.builder(Component.nullToEmpty("Barter"),var1 -> {
-            ShoppyMod.MOD.getNetworking().sendToServer(new AttemptPurchase());
-        }).size(42, 20).pos(leftPos + 84, topPos + 42).build());*/
+
+
     }
 
     @Override

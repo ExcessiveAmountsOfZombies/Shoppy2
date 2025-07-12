@@ -64,7 +64,7 @@ public abstract class AbstractTradingBlock extends BaseEntityBlock implements En
         } else {
             MenuProvider menuprovider = this.getMenuProvider(state, level, pos);
             if (menuprovider != null) {
-                player.openMenu(menuprovider);
+                player.openMenu(menuprovider, pos);
             }
 
             return InteractionResult.CONSUME;

@@ -72,5 +72,8 @@
   "common.purchase.full_inventory": "You can not trade when your inventory is full.",
   "common.station.message_for": "for",
   "common.station.message_buying": "Buying",
-  "common.station.message_selling": "Selling"
+  "common.station.message_selling": "Selling",
+
+
+  "screen.shoppy.add_item": "ADD ITEM"
 }
