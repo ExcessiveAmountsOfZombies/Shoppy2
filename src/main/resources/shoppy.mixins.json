@@ -4,8 +4,13 @@
   "package": "com.epherical.shoppy.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "client.AccessorAbstractContainerMenu"
   ],
   "client": [
+    "client.AccessorAbstractContainerScreen",
+    "client.AccessorCreativeModeInventoryScreen",
+    "client.MixinCreativeModeInventoryScreen",
+    "client.MixinItemPickerMenu"
   ],
   "injectors": {
     "defaultRequire": 1

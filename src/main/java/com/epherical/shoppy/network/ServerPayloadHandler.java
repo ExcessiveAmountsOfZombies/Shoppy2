@@ -22,7 +22,10 @@ public class ServerPayloadHandler {
                 player.openMenu(new SimpleMenuProvider(
                         (id, inv, p) -> BarteringMenuOwner.barteringOwner(id, bartering.getBlockPos(), true),
                         bbe.getName()
-                ), buf -> buf.writeBlockPos(bartering.getBlockPos()));
+                ), buf -> {
+                    buf.writeBlockPos(bartering.getBlockPos());
+                    buf.writeBoolean(true);
+                });
             } else {
                 LOGGER.warn("Player {} tried to open a bartering block as an owner and they aren't the owner... ", player.getScoreboardName());
             }
