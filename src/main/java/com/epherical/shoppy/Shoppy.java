@@ -6,8 +6,9 @@ import com.epherical.shoppy.block.entity.BarteringBlockEntity;
 import com.epherical.shoppy.block.entity.CreativeBarteringBlockEntity;
 import com.epherical.shoppy.menu.bartering.BarteringMenu;
 import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
-import com.epherical.shoppy.network.AddItemRequestPayload;
+import com.epherical.shoppy.network.payloads.AddItemRequestPayload;
 import com.epherical.shoppy.network.ServerPayloadHandler;
+import com.epherical.shoppy.network.payloads.SetSaleItemPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -160,6 +161,8 @@ public class Shoppy {
         final PayloadRegistrar registrar = event.registrar("1")
                 .executesOn(HandlerThread.MAIN);
         registrar.playToServer(AddItemRequestPayload.TYPE, AddItemRequestPayload.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(SetSaleItemPayload.TYPE, SetSaleItemPayload.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(SetSaleItemPayload.TYPE, SetSaleItemPayload.STREAM_CODEC, ServerPayloadHandler::handle);
     }
 
     @SubscribeEvent

@@ -75,5 +75,9 @@
   "common.station.message_selling": "Selling",
 
 
-  "screen.shoppy.add_price": "ADD PRICE"
+  "screen.shoppy.add_price": "ADD PRICE",
+  "screen.shoppy.set_item": "CURRENCY",
+  "screen.shoppy.set_sold": "RECEIVED",
+  "tooltip.shoppy.currency_item": "Buyers must pay with this item.",
+  "tooltip.shoppy.sale_item": "Buyers will receive this item."
 }

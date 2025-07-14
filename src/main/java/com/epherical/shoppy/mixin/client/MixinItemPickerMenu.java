@@ -31,6 +31,7 @@ public class MixinItemPickerMenu {
     public Slot shoppy$useMySlotsStill(CreativeModeInventoryScreen.ItemPickerMenu instance, Slot slot) {
         AccessorAbstractContainerMenu menu = (AccessorAbstractContainerMenu) instance;
         if (instance instanceof CustomItemPickerMenu) {
+
             return menu.invokeAddSlot(new ShoppyCreativeSlot(slot.container, slot.getSlotIndex(), slot.x, slot.y));
         } else {
             menu.invokeAddSlot(slot);

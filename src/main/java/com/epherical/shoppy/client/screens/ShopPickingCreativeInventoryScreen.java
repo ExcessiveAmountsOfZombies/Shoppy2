@@ -6,8 +6,14 @@ import net.minecraft.world.flag.FeatureFlagSet;
 
 public class ShopPickingCreativeInventoryScreen extends CreativeModeInventoryScreen {
 
+    private final boolean currency;
 
-    public ShopPickingCreativeInventoryScreen(LocalPlayer player, FeatureFlagSet enabledFeatures, boolean displayOperatorCreativeTab) {
+    public ShopPickingCreativeInventoryScreen(LocalPlayer player, FeatureFlagSet enabledFeatures, boolean displayOperatorCreativeTab, boolean currency) {
         super(player, enabledFeatures, displayOperatorCreativeTab);
+        this.currency = currency;
+    }
+
+    public boolean isCurrency() {
+        return currency;
     }
 }

@@ -1,4 +1,4 @@
-package com.epherical.shoppy.network;
+package com.epherical.shoppy.network.payloads;
 
 import com.epherical.shoppy.Shoppy;
 import io.netty.buffer.ByteBuf;
