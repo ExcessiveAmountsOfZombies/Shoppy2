@@ -76,8 +76,6 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                                  .size(68, 14).pos(btnX, btnY).build());
         }
 
-        btnX = leftPos + (imageWidth - 150) / 2;
-        btnY = topPos + 25;
 
         if (getMenu().isEditing()) {
 
@@ -91,6 +89,9 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                     .onValueChange((checkbox, value) -> submitOffer()).build());
             checkbox1.setTooltip(Tooltip.create(Component.literal("Submit the pricing.")));
         }
+
+        btnX = leftPos + (imageWidth - 150) / 2;
+        btnY = topPos + 25;
 
         addRenderableWidget(Button.builder(Component.translatable("screen.shoppy.set_item"), button -> {
             minecraft.setScreen(new ShopPickingCreativeInventoryScreen(minecraft.player, this.minecraft.player.connection.enabledFeatures(), false, true));
@@ -129,7 +130,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                     graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
                 }
                 graphics.renderItem(saleStack, x, y);
-                graphics.drawString(this.font, "x"+bartering.getSaleItemCount(), x + 16, y + 4, 0xFFFFFF);
+                graphics.drawString(this.font, "x"+menu.getContainerData().get(0), x + 16, y + 4, 0xFFFFFF);
                 graphics.renderItemDecorations(this.font, saleStack, x, y);
             }
 
@@ -153,7 +154,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                 }
 
                 graphics.renderItem(currencyStack, x, y);
-                graphics.drawString(this.font, "x"+bartering.getCurrencyItemCount(), x + 16, y + 4, 0xFFFFFF);
+                graphics.drawString(this.font, "x"+menu.getContainerData().get(1), x + 16, y + 4, 0xFFFFFF);
                 graphics.renderItemDecorations(this.font, currencyStack, x, y);
             }
         }
@@ -216,7 +217,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
         }
     }
 
-    private static boolean isHovering(int mouseX, int mouseY, int x, int y) {
+    public static boolean isHovering(int mouseX, int mouseY, int x, int y) {
         return mouseX >= x && mouseX < x + ITEM_SIZE
                 && mouseY >= y && mouseY < y + ITEM_SIZE;
     }

@@ -20,6 +20,7 @@ import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.MenuConstructor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -45,10 +46,34 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
 
     protected UUID owner = Util.NIL_UUID;
 
+
+    protected final ContainerData data = new ContainerData() {
+        @Override
+        public int get(int index) {
+            return switch (index) {
+                case 0 -> saleItemCount;
+                case 1 -> currencyItemCount;
+                default -> 0;
+            };
+        }
+
+        @Override
+        public void set(int index, int value) {
+            switch (index) {
+                case 0 -> saleItemCount = value;
+                case 1 -> currencyItemCount = value;
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+    };
+
     /* put anywhere inside the class */
     public void setOffer(int idx, int cost, int sale) {
-        if (idx < 0 || idx >= saleCounts.length)
-            return;
+        if (idx < 0 || idx >= saleCounts.length) return;
         costCounts[idx] = cost;
         saleCounts[idx] = sale;
     }
@@ -64,29 +89,43 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
 
     public void tryPurchase(Player player, int offerIdx) {
         if (offerIdx < 0 || offerIdx > 2) return;
-        int sale = saleCounts[offerIdx];
-        int cost = costCounts[offerIdx];
 
-        if (sale <= 0 || cost <= 0) return;
-        if (getStock() < sale) return;                                   // no stock
-        if (!player.getInventory().contains(new ItemStack(currency.getItem(), cost))) return; // no money
+        int saleQty = saleCounts[offerIdx];
+        int costQty = costCounts[offerIdx];
 
-        // remove money from player
-        //ItemHandlerHelper.insertItem(player.getInventory(), currency, cost, false);
+        if (saleQty <= 0 || costQty <= 0) return;
+        if (saleItemCount < saleQty) return;
 
 
-        // give products
-        ItemStack toGive = saleItem.copy();
-        toGive.setCount(sale);
-        ItemHandlerHelper.giveItemToPlayer(player, toGive);
+        ItemStack currencyTemplate = new ItemStack(currency.getItem());
+        int playerCurrency = 0;
 
-        // consume stock, add money to revenue slot
-        inventory.get(0).shrink(sale);
-        ItemStack output = inventory.get(1);
-        if (output.isEmpty())
-            inventory.set(1, new ItemStack(currency.getItem(), cost));
-        else
-            output.grow(cost);
+        for (ItemStack stack : player.getInventory().items) {
+            if (ItemStack.isSameItem(stack, currencyTemplate)) {
+                playerCurrency += stack.getCount();
+                if (playerCurrency >= costQty) break; // early exit
+            }
+        }
+        if (playerCurrency < costQty) return;  // insufficient funds
+
+        int remaining = costQty;
+        for (int i = 0; i < player.getInventory().items.size() && remaining > 0; i++) {
+            ItemStack stack = player.getInventory().items.get(i);
+            if (!ItemStack.isSameItem(stack, currencyTemplate)) continue;
+
+            int toTake = Math.min(stack.getCount(), remaining);
+            stack.shrink(toTake);
+            if (stack.isEmpty()) player.getInventory().items.set(i, ItemStack.EMPTY);
+            remaining -= toTake;
+        }
+        if (remaining > 0) return;
+
+        ItemStack product = saleItem.copy();
+        product.setCount(saleQty);
+        ItemHandlerHelper.giveItemToPlayer(player, product);
+
+        saleItemCount = Math.max(0, saleItemCount - saleQty);
+        currencyItemCount += costQty;
 
         setChanged();
     }
@@ -134,9 +173,9 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
     @Override
     public AbstractContainerMenu createMenu(int i, Inventory inventory, Player player) {
         if (getOwner().equals(player.getUUID())) {
-            return BarteringMenuOwner.barteringOwner(i, getBlockPos(), false);
+            return BarteringMenuOwner.barteringOwner(i, getBlockPos(), false, data);
         } else {
-            return BarteringMenu.barteringMenu(i, getBlockPos());
+            return BarteringMenu.barteringMenu(i, getBlockPos(), data);
         }
     }
 
@@ -163,17 +202,14 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
             currency = ItemStack.parse(registries, tag.getCompound("Currency")).orElse(ItemStack.EMPTY);
 
         if (tag.contains("SaleCounts", IntArrayTag.TAG_INT_ARRAY))
-            System.arraycopy(tag.getIntArray("SaleCounts"), 0, saleCounts, 0,
-                    Math.min(3, tag.getIntArray("SaleCounts").length));
+            System.arraycopy(tag.getIntArray("SaleCounts"), 0, saleCounts, 0, Math.min(3, tag.getIntArray("SaleCounts").length));
         if (tag.contains("CostCounts", IntArrayTag.TAG_INT_ARRAY))
-            System.arraycopy(tag.getIntArray("CostCounts"), 0, costCounts, 0,
-                    Math.min(3, tag.getIntArray("CostCounts").length));
+            System.arraycopy(tag.getIntArray("CostCounts"), 0, costCounts, 0, Math.min(3, tag.getIntArray("CostCounts").length));
 
         saleItemCount = tag.getInt("SaleItemCount");
         currencyItemCount = tag.getInt("CurrencyItemCount");
 
-        if (tag.hasUUID("Owner"))
-            owner = tag.getUUID("Owner");
+        if (tag.hasUUID("Owner")) owner = tag.getUUID("Owner");
     }
 
 
@@ -266,4 +302,9 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
     public NonNullList<ItemStack> getInventory() {
         return inventory;
     }
+
+    public ContainerData getContainerData() {
+        return data;
+    }
+
 }

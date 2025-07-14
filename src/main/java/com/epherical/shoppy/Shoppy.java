@@ -4,17 +4,20 @@ import com.epherical.shoppy.block.BarteringBlock;
 import com.epherical.shoppy.block.CreativeBarteringBlock;
 import com.epherical.shoppy.block.entity.BarteringBlockEntity;
 import com.epherical.shoppy.block.entity.CreativeBarteringBlockEntity;
+import com.epherical.shoppy.commands.ShopOwnerCommand;
 import com.epherical.shoppy.menu.bartering.BarteringMenu;
 import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
 import com.epherical.shoppy.network.payloads.AddItemRequestPayload;
 import com.epherical.shoppy.network.ServerPayloadHandler;
 import com.epherical.shoppy.network.payloads.PriceSubmissionPayload;
+import com.epherical.shoppy.network.payloads.PurchaseAttemptPayload;
 import com.epherical.shoppy.network.payloads.SetSaleItemPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.commands.SetBlockCommand;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlags;
@@ -36,6 +39,7 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.items.IItemHandler;
@@ -156,8 +160,6 @@ public class Shoppy {
                         return out;
                     }
                     return ItemStack.EMPTY;
-
-
                 }
 
                 @Override
@@ -165,7 +167,7 @@ public class Shoppy {
                     if (slot == 0) {
                         if (stack.isEmpty()) return ItemStack.EMPTY;
                         if (barteringBlockEntity.getSaleItem().isEmpty() && !ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem())) return stack;
-                        int free = 100 - barteringBlockEntity.getSaleItemCount();
+                        int free = 150 - barteringBlockEntity.getSaleItemCount();
                         if (free <= 0) return stack;            // stock full
 
                         int toInsert = Math.min(free, stack.getCount());
@@ -191,11 +193,18 @@ public class Shoppy {
         registrar.playToServer(AddItemRequestPayload.TYPE, AddItemRequestPayload.STREAM_CODEC, ServerPayloadHandler::handle);
         registrar.playToServer(SetSaleItemPayload.TYPE, SetSaleItemPayload.STREAM_CODEC, ServerPayloadHandler::handle);
         registrar.playToServer(PriceSubmissionPayload.TYPE, PriceSubmissionPayload.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(PurchaseAttemptPayload.TYPE, PurchaseAttemptPayload.STREAM_CODEC, ServerPayloadHandler::handle);
     }
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
 
+    }
+
+
+    @SubscribeEvent
+    public void onCommandRegister(RegisterCommandsEvent event) {
+        ShopOwnerCommand.register(event.getDispatcher());
     }
 
 

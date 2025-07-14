@@ -1,9 +1,11 @@
 package com.epherical.shoppy.network;
 
 import com.epherical.shoppy.block.entity.BarteringBlockEntity;
+import com.epherical.shoppy.menu.bartering.BarteringMenu;
 import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
 import com.epherical.shoppy.network.payloads.AddItemRequestPayload;
 import com.epherical.shoppy.network.payloads.PriceSubmissionPayload;
+import com.epherical.shoppy.network.payloads.PurchaseAttemptPayload;
 import com.epherical.shoppy.network.payloads.SetSaleItemPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
@@ -27,7 +29,7 @@ public class ServerPayloadHandler {
 
             if (bbe.getOwner().equals(player.getUUID())) {
                 player.openMenu(new SimpleMenuProvider(
-                        (id, inv, p) -> BarteringMenuOwner.barteringOwner(id, bartering.getBlockPos(), true),
+                        (id, inv, p) -> BarteringMenuOwner.barteringOwner(id, bartering.getBlockPos(), true, bartering.getContainerData()),
                         bbe.getName()
                 ), buf -> {
                     buf.writeBlockPos(bartering.getBlockPos());
@@ -73,12 +75,12 @@ public class ServerPayloadHandler {
             player1.connection.send(bbe.getUpdatePacket());
         }
     }
+
     public static void handle(PriceSubmissionPayload payload, IPayloadContext ctx) {
         var player = ctx.player();
 
         if (!(player.containerMenu instanceof BarteringMenuOwner menu))
             return;
-
 
 
         var be = player.level().getBlockEntity(menu.getBlockPos());
@@ -111,5 +113,18 @@ public class ServerPayloadHandler {
                 buf.writeBoolean(false);
             });
         }
+    }
+
+    public static void handle(PurchaseAttemptPayload payload, IPayloadContext ctx) {
+        ServerPlayer player = (ServerPlayer) ctx.player();
+        int idx = payload.offerIndex();
+
+        if (!(player.containerMenu instanceof BarteringMenu bartering)) return;
+        BarteringBlockEntity be = (BarteringBlockEntity) player.level().getBlockEntity(bartering.getBlockPos());
+
+        if (be == null) return;
+        // todo; dont let owner purhcase
+
+        be.tryPurchase(player, idx);
     }
 }
