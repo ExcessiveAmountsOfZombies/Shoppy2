@@ -38,6 +38,7 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.network.IContainerFactory;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -144,14 +145,40 @@ public class Shoppy {
 
                 @Override
                 public ItemStack extractItem(int slot, int amount, boolean simulate) {
-                    // hoppers may ONLY pull from slot 1 (revenue) – block stock theft
-                    return slot == 1 ? super.extractItem(slot, amount, simulate) : ItemStack.EMPTY;
+                    if (slot == 1 && barteringBlockEntity.getCurrencyItemCount() > 0 && amount > 0) {
+                        int taken = Math.min(amount, barteringBlockEntity.getCurrencyItemCount());
+                        if (!simulate) {
+                            barteringBlockEntity.addCurrencyItems(-taken);
+                        }
+                        // todo; figure out the curreny...
+                        ItemStack out = barteringBlockEntity.getCurrencyItem().copy();
+                        out.setCount(taken);
+                        return out;
+                    }
+                    return ItemStack.EMPTY;
+
+
                 }
 
                 @Override
                 public ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
-                    // hoppers may ONLY insert into slot 0
-                    return slot == 0 ? super.insertItem(slot, stack, simulate) : stack;
+                    if (slot == 0) {
+                        if (stack.isEmpty()) return ItemStack.EMPTY;
+                        if (barteringBlockEntity.getSaleItem().isEmpty() && !ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem())) return stack;
+                        int free = 100 - barteringBlockEntity.getSaleItemCount();
+                        if (free <= 0) return stack;            // stock full
+
+                        int toInsert = Math.min(free, stack.getCount());
+                        if (!simulate) {
+                            barteringBlockEntity.addSaleItems(toInsert);
+                        }
+
+                        return stack.copyWithCount(stack.getCount() - toInsert);
+                    }
+
+                    /* slot 1 refuses insertion */
+                    return stack;
+
                 }
             };
         }, BARTERING_STATION.get());
