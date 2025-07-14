@@ -4,6 +4,7 @@ import com.epherical.shoppy.block.entity.BarteringBlockEntity;
 import com.epherical.shoppy.client.widget.AddItemButton;
 import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
 import com.epherical.shoppy.network.payloads.AddItemRequestPayload;
+import com.epherical.shoppy.network.payloads.PriceSubmissionPayload;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -34,6 +35,13 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
     private static final int CURRENCY_ITEM_X  = 111;
     private static final int CURRENCY_ITEM_Y  = 133;
 
+    private static final int ROW_START_Y  = 30;   // first row offset from topPos
+    private static final int ROW_HEIGHT   = 20;   // distance between rows
+    private static final int ROW_PAD_X    = 8;    // left / right padding inside BG
+    private static final int TEXT_Y_OFF   = 6;    // text offset inside a row
+
+    private EditBox priceField;
+    private EditBox receivedField;
 
 
     private BarteringBlockEntity bartering;
@@ -57,27 +65,31 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
 
         bartering = (BarteringBlockEntity) minecraft.level.getBlockEntity(menu.getBlockPos());
 
-        // todo; place the button lower once the items are in place...
+        int rows = populatedRows();
         int btnX = leftPos + (imageWidth - 150) / 2;
-        int btnY = topPos + 25;
-        if (!getMenu().isEditing()) {
-            this.addRenderableWidget(AddItemButton.addItem(ADD_ITEM_BTN, button -> {
-                PacketDistributor.sendToServer(new AddItemRequestPayload(menu.getBlockPos()));
-            }).size(68, 14).pos(btnX, btnY).build());
-        } else {
-            EditBox price = this.addRenderableWidget(new EditBox(minecraft.font, btnX - 8, btnY + 2, 30, 14, Component.literal("Price")));
-            price.setTooltip(Tooltip.create(Component.literal("Price -- The price that the player must pay to 'receive' any items.")));
-            EditBox received = this.addRenderableWidget(new EditBox(minecraft.font, btnX + 24, btnY + 2, 30, 14, Component.literal("Received")));
-            received.setTooltip(Tooltip.create(Component.literal("Received -- What the player will get in return for giving you the price of the item.")));
+        int btnY = topPos  + ROW_START_Y + rows * ROW_HEIGHT;
+
+        if (rows < 3 && !getMenu().isEditing()) {
+            addRenderableWidget(
+                    AddItemButton.addItem(ADD_ITEM_BTN,
+                            b -> PacketDistributor.sendToServer(new AddItemRequestPayload(menu.getBlockPos())))
+                                 .size(68, 14).pos(btnX, btnY).build());
+        }
+
+        btnX = leftPos + (imageWidth - 150) / 2;
+        btnY = topPos + 25;
+
+        if (getMenu().isEditing()) {
+
+            priceField = this.addRenderableWidget(new EditBox(minecraft.font, btnX + 24, btnY + 2, 30, 14, Component.literal("Price")));
+            priceField.setTooltip(Tooltip.create(Component.literal("Price -- The price that the player must pay to 'receive' any items.")));
+            receivedField = this.addRenderableWidget(new EditBox(minecraft.font, btnX - 8, btnY + 2, 30, 14, Component.literal("Received")));
+            receivedField.setTooltip(Tooltip.create(Component.literal("Received -- What the player will get in return for giving you the price of the item.")));
             Checkbox checkbox1 = this.addRenderableWidget(Checkbox.builder(Component.literal(""), minecraft.font)
                     .selected(true)
                     .pos(btnX + 30 + 25, btnY + 1)
-                    .onValueChange((checkbox, value) -> {
-                        // todo send a packet to the server
-                        System.out.println("Hwhaha");
-                    }).build());
+                    .onValueChange((checkbox, value) -> submitOffer()).build());
             checkbox1.setTooltip(Tooltip.create(Component.literal("Submit the pricing.")));
-
         }
 
         addRenderableWidget(Button.builder(Component.translatable("screen.shoppy.set_item"), button -> {
@@ -116,8 +128,8 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                             .withStyle(ChatFormatting.GRAY));
                     graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
                 }
-
                 graphics.renderItem(saleStack, x, y);
+                graphics.drawString(this.font, "x"+bartering.getSaleItemCount(), x + 16, y + 4, 0xFFFFFF);
                 graphics.renderItemDecorations(this.font, saleStack, x, y);
             }
 
@@ -141,7 +153,65 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                 }
 
                 graphics.renderItem(currencyStack, x, y);
+                graphics.drawString(this.font, "x"+bartering.getCurrencyItemCount(), x + 16, y + 4, 0xFFFFFF);
                 graphics.renderItemDecorations(this.font, currencyStack, x, y);
+            }
+        }
+
+        for (int i = 0; i < 3; i++) {
+            int saleCnt = bartering.getSaleCount(i);
+            int costCnt = bartering.getCostCount(i);
+            if (saleCnt == 0 && costCnt == 0) continue;
+
+            int rowY = topPos + ROW_START_Y + i * ROW_HEIGHT;
+
+            left  = leftPos + ROW_PAD_X - 2;
+            int right = leftPos + 110 - ROW_PAD_X;
+            graphics.fill(left, rowY, right, rowY + ROW_HEIGHT - 2, 0x88000000);
+
+            ItemStack saleItem = bartering.getSaleItem();
+            if (!saleItem.isEmpty()) {
+                graphics.renderItem(saleItem, left + 4, rowY + 1);
+                graphics.drawString(minecraft.font, String.valueOf(saleCnt),
+                        left + 4 + ITEM_SIZE + 4, rowY + TEXT_Y_OFF, 0xFFFFFF, false);
+
+
+                if (isHovering(pMouseX, pMouseY, left + 4, rowY + 1)) {
+                    List<Component> lines = bartering.getSaleItem()
+                            .getTooltipLines(
+                                    Item.TooltipContext.of(minecraft.player.level()),
+                                    minecraft.player,
+                                    minecraft.options.advancedItemTooltips
+                                            ? TooltipFlag.Default.ADVANCED
+                                            : TooltipFlag.Default.NORMAL);
+
+                    lines.add(Component.translatable("tooltip.shoppy.sale_item")
+                            .withStyle(ChatFormatting.GRAY));
+                    graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
+                }
+
+            }
+
+            ItemStack curItem = bartering.getCurrencyItem();
+            if (!curItem.isEmpty()) {
+                int curX = right - ITEM_SIZE - 40;
+                graphics.renderItem(curItem, curX, rowY + 1);
+                graphics.drawString(minecraft.font, String.valueOf(costCnt),
+                        curX + ITEM_SIZE + 4, rowY + TEXT_Y_OFF, 0xFFFFFF, false);
+
+                if (isHovering(pMouseX, pMouseY, curX, rowY + 1)) {
+                    List<Component> lines = bartering.getCurrencyItem()
+                            .getTooltipLines(
+                                    Item.TooltipContext.of(minecraft.player.level()),
+                                    minecraft.player,
+                                    minecraft.options.advancedItemTooltips
+                                            ? TooltipFlag.Default.ADVANCED
+                                            : TooltipFlag.Default.NORMAL);
+
+                    lines.add(Component.translatable("tooltip.shoppy.currency_item")
+                            .withStyle(ChatFormatting.GRAY));
+                    graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
+                }
             }
         }
     }
@@ -158,6 +228,29 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
         int left = leftPos;
         int top = topPos;
         graphics.blit(CONTAINER_BACKGROUND, left, top, 0, 0, 176, 191);
-
     }
+
+
+    private void submitOffer() {
+        int price    = safeParse(priceField.getValue());
+        int received = safeParse(receivedField.getValue());
+
+        var payload = new PriceSubmissionPayload(populatedRows(), price, received); // offerIndex 0; adjust as needed
+        PacketDistributor.sendToServer(payload);
+    }
+
+    private static int safeParse(String txt) {
+        try { return Integer.parseInt(txt.trim()); }
+        catch (NumberFormatException ignored) { return 0; }
+    }
+
+    private int populatedRows() {
+        if (bartering == null) return 0;
+        int rows = 0;
+        for (int i = 0; i < 3; i++)
+            if (bartering.getSaleCount(i) > 0 || bartering.getCostCount(i) > 0)
+                rows++;
+        return rows;
+    }
+
 }

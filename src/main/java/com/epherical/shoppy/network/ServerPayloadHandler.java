@@ -8,6 +8,7 @@ import com.epherical.shoppy.network.payloads.SetSaleItemPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -40,10 +41,6 @@ public class ServerPayloadHandler {
 
     public static void handle(SetSaleItemPayload payload, IPayloadContext ctx) {
         var player = ctx.player();
-
-        System.out.println(player.containerMenu);
-        System.out.println(player.hasContainerOpen());
-        System.out.println(player.containerMenu.getClass());
 
         if (player.containerMenu instanceof BarteringMenuOwner bartering) {
             var be = player.level().getBlockEntity(bartering.getBlockPos());
@@ -82,17 +79,37 @@ public class ServerPayloadHandler {
         if (!(player.containerMenu instanceof BarteringMenuOwner menu))
             return;
 
+
+
         var be = player.level().getBlockEntity(menu.getBlockPos());
         if (!(be instanceof BarteringBlockEntity bbe))
             return;
 
         if (!bbe.getOwner().equals(player.getUUID()))
-            return;                       // not the owner – silently abort
+            return;                      // todo; log
 
         if (payload.price() == 0)
-            return;                       // invalid submission
+            return;                       // todo; send to player about bad submission
+
+        if (payload.received() == 0) {
+            return;                     // todo; send to player about bad submission
+        }
 
         bbe.setOffer(payload.offerIndex(), payload.price(), payload.received());
         bbe.setChanged();
+
+        ServerPlayer player1 = (ServerPlayer) player;
+
+        menu.setEditing(false);
+        player1.connection.send(bbe.getUpdatePacket());
+
+
+        MenuProvider menuProvider = bbe.getBlockState().getMenuProvider(player1.level(), bbe.getBlockPos());
+        if (menuProvider != null) {
+            player1.openMenu(menuProvider, buf -> {
+                buf.writeBlockPos(bbe.getBlockPos());
+                buf.writeBoolean(false);
+            });
+        }
     }
 }
