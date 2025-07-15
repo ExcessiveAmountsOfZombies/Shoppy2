@@ -95,11 +95,11 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
 
         addRenderableWidget(Button.builder(Component.translatable("screen.shoppy.set_item"), button -> {
             minecraft.setScreen(new ShopPickingCreativeInventoryScreen(minecraft.player, this.minecraft.player.connection.enabledFeatures(), false, true));
-        }).size(60, 14).pos(btnX + 98, btnY + 147).build());
+        }).size(60, 14).pos(btnX + 98, btnY + 147 - 80).build());
 
         addRenderableWidget(Button.builder(Component.translatable("screen.shoppy.set_sold"), button -> {
             minecraft.setScreen(new ShopPickingCreativeInventoryScreen(minecraft.player, this.minecraft.player.connection.enabledFeatures(), false, false));
-        }).size(60, 14).pos(btnX + 98, btnY + 147 - 14).build());
+        }).size(60, 14).pos(btnX + 98, btnY + 147 - 14 - 80).build());
 
     }
 
@@ -114,7 +114,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
             ItemStack saleStack = bartering.getSaleItem();
             if (!saleStack.isEmpty()) {
                 int x = left + CURRENCY_ITEM_X;
-                int y = top  + CURRENCY_ITEM_Y - ITEM_SIZE;
+                int y = top  + CURRENCY_ITEM_Y - ITEM_SIZE - 72;
 
                 if (isHovering(pMouseX, pMouseY, x, y)) {
                     List<Component> lines = saleStack
@@ -137,7 +137,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
             ItemStack currencyStack = bartering.getCurrencyItem();
             if (!currencyStack.isEmpty()) {
                 int x = left + CURRENCY_ITEM_X;
-                int y = top  + CURRENCY_ITEM_Y;
+                int y = top  + CURRENCY_ITEM_Y - 72;
 
                 if (isHovering(pMouseX, pMouseY, x, y)) {
                     List<Component> lines = bartering.getCurrencyItem()
