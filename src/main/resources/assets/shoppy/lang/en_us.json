@@ -79,5 +79,7 @@
   "screen.shoppy.set_item": "TAKING",
   "screen.shoppy.set_sold": "SELLING",
   "tooltip.shoppy.currency_item": "You give me these.",
-  "tooltip.shoppy.sale_item": "I will give you these."
+  "tooltip.shoppy.sale_item": "I will give you these.",
+  "tooltip.shoppy.sale_stock": "Current Stock",
+  "screen.shoppy.confirm": "Confirm"
 }

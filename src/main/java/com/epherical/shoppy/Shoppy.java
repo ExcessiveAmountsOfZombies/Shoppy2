@@ -167,7 +167,7 @@ public class Shoppy {
                     if (slot == 0) {
                         if (stack.isEmpty()) return ItemStack.EMPTY;
                         if (barteringBlockEntity.getSaleItem().isEmpty() && !ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem())) return stack;
-                        int free = 150 - barteringBlockEntity.getSaleItemCount();
+                        int free = barteringBlockEntity.getFreeSlots();
                         if (free <= 0) return stack;            // stock full
 
                         int toInsert = Math.min(free, stack.getCount());
@@ -178,7 +178,6 @@ public class Shoppy {
                         return stack.copyWithCount(stack.getCount() - toInsert);
                     }
 
-                    /* slot 1 refuses insertion */
                     return stack;
 
                 }

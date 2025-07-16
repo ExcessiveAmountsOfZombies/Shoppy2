@@ -47,6 +47,9 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
     protected UUID owner = Util.NIL_UUID;
 
 
+    private static final int SLOTS = 1024;
+
+
     protected final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
@@ -241,6 +244,10 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
     @Override
     public @Nullable Component getCustomName() {
         return Nameable.super.getCustomName();
+    }
+
+    public int getFreeSlots() {
+        return SLOTS - getSaleItemCount();
     }
 
     public int getSaleItemCount() {

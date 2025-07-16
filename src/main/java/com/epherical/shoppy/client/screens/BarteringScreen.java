@@ -3,12 +3,21 @@ package com.epherical.shoppy.client.screens;
 import com.epherical.shoppy.block.entity.BarteringBlockEntity;
 import com.epherical.shoppy.client.widget.RowButton;
 import com.epherical.shoppy.menu.bartering.BarteringMenu;
+import com.epherical.shoppy.network.payloads.PurchaseAttemptPayload;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.neoforged.neoforge.network.PacketDistributor;
+
+import java.util.List;
+import java.util.Optional;
 
 import static com.epherical.shoppy.Shoppy.MODID;
 
@@ -22,6 +31,9 @@ public class BarteringScreen extends AbstractContainerScreen<BarteringMenu> {
     private static final int TEXT_Y_OFF = 6;    // text offset inside a row
     private static final int ITEM_SIZE = 16;
 
+
+    private static final int CURRENCY_ITEM_X  = 111;
+    private static final int CURRENCY_ITEM_Y  = 133;
 
     private BarteringBlockEntity bartering;
 
@@ -44,7 +56,10 @@ public class BarteringScreen extends AbstractContainerScreen<BarteringMenu> {
             int x = leftPos + ROW_PAD_X - 2;
             int width = 110 - ROW_PAD_X * 2 + 2;
 
-            addRenderableWidget(new RowButton(x, y, width, ROW_HEIGHT - 2, i, bartering));
+            RowButton btn = new RowButton(x, y, width, ROW_HEIGHT - 2, i, bartering,
+                    ii -> PacketDistributor.sendToServer(new PurchaseAttemptPayload(ii)));
+            this.addRenderableWidget(btn);
+
         }
     }
 
@@ -52,6 +67,59 @@ public class BarteringScreen extends AbstractContainerScreen<BarteringMenu> {
     public void render(GuiGraphics graphics, int pMouseX, int pMouseY, float pPartialTick) {
         super.render(graphics, pMouseX, pMouseY, pPartialTick);
         this.renderTooltip(graphics, pMouseX, pMouseY);
+        int left = leftPos;
+        int top = topPos;
+        if (bartering != null) {
+            ItemStack saleStack = bartering.getSaleItem();
+            if (!saleStack.isEmpty()) {
+                int x = left + CURRENCY_ITEM_X;
+                int y = top  + CURRENCY_ITEM_Y - ITEM_SIZE - 112;
+
+                if (BarteringScreenOwner.isHovering(pMouseX, pMouseY, x, y)) {
+                    List<Component> lines = saleStack
+                            .getTooltipLines(
+                                    Item.TooltipContext.of(minecraft.player.level()),
+                                    minecraft.player,
+                                    minecraft.options.advancedItemTooltips
+                                            ? TooltipFlag.Default.ADVANCED
+                                            : TooltipFlag.Default.NORMAL);
+
+                    lines.add(Component.translatable("tooltip.shoppy.sale_stock")
+                            .withStyle(ChatFormatting.GRAY));
+                    graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
+                }
+                graphics.renderItem(saleStack, x, y);
+                graphics.drawString(this.font, "x"+menu.getContainerData().get(0), x + 16, y + 4, 0xFFFFFF);
+                graphics.renderItemDecorations(this.font, saleStack, x, y);
+            }
+
+            ItemStack currencyStack = bartering.getCurrencyItem();
+            if (!currencyStack.isEmpty()) {
+                int x = left + CURRENCY_ITEM_X;
+                int y = top  + CURRENCY_ITEM_Y - 112;
+
+                if (BarteringScreenOwner.isHovering(pMouseX, pMouseY, x, y)) {
+                    List<Component> lines = bartering.getCurrencyItem()
+                            .getTooltipLines(
+                                    Item.TooltipContext.of(minecraft.player.level()),
+                                    minecraft.player,
+                                    minecraft.options.advancedItemTooltips
+                                            ? TooltipFlag.Default.ADVANCED
+                                            : TooltipFlag.Default.NORMAL);
+
+                    lines.add(Component.translatable("tooltip.shoppy.currency_item")
+                            .withStyle(ChatFormatting.GRAY));
+                    graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
+                }
+
+                graphics.renderItem(currencyStack, x, y);
+                graphics.drawString(this.font, "x"+menu.getContainerData().get(1), x + 16, y + 4, 0xFFFFFF);
+                graphics.renderItemDecorations(this.font, currencyStack, x, y);
+            }
+        }
+
+
+
     }
 
     @Override
