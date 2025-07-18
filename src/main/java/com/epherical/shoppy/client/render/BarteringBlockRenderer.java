@@ -2,19 +2,14 @@ package com.epherical.shoppy.client.render;
 
 import com.epherical.shoppy.block.AbstractTradingBlock;
 import com.epherical.shoppy.block.entity.BarteringBlockEntity;
-import com.epherical.shoppy.client.ShoppyClient;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 
 public class BarteringBlockRenderer<T extends BarteringBlockEntity> implements BlockEntityRenderer<T> {

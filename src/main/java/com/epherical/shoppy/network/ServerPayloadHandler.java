@@ -59,7 +59,11 @@ public class ServerPayloadHandler {
 
             ItemStack copy = payload.stack().copyWithCount(1);
 
-            // todo; check if there are already items in the shop first. it'll have to be cleared out before setting.
+            if (bbe.getSaleItemCount() > 0 || bbe.getCurrencyItemCount() > 0) {
+                player.sendSystemMessage(Component.translatable(
+                        "message.shoppy.cannot_change_items_with_stock"));
+                return;
+            }
 
             if (payload.currency()) {
                 bbe.setCurrency(copy);

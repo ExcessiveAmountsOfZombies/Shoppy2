@@ -81,5 +81,6 @@
   "tooltip.shoppy.currency_item": "You give me these.",
   "tooltip.shoppy.sale_item": "I will give you these.",
   "tooltip.shoppy.sale_stock": "Current Stock",
-  "screen.shoppy.confirm": "Confirm"
+  "screen.shoppy.confirm": "Confirm",
+  "message.shoppy.cannot_change_items_with_stock": "You must empty the shop before changing any items."
 }

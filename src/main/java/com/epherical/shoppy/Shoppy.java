@@ -19,6 +19,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.commands.SetBlockCommand;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
@@ -52,6 +53,7 @@ import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.server.permission.PermissionAPI;
 import net.neoforged.neoforge.server.permission.events.PermissionGatherEvent;
 import net.neoforged.neoforge.server.permission.nodes.PermissionNode;
 import net.neoforged.neoforge.server.permission.nodes.PermissionTypes;
@@ -214,16 +216,17 @@ public class Shoppy {
 
     @SubscribeEvent
     public void onPlayerInteract(PlayerInteractEvent.LeftClickBlock event) {
-        if (FMLEnvironment.dist.isDedicatedServer()) {
+
+        if (event.getEntity() instanceof ServerPlayer) {
             Player player = event.getEntity();
             BlockPos pos = event.getPos();
             ServerLevel level = (ServerLevel) event.getEntity().level();
             BlockEntity entity = level.getBlockEntity(pos);
-            /*if (entity instanceof AbstractTradingBlockEntity trading) {
+            if (entity instanceof BarteringBlockEntity trading) {
                 if ((!trading.getOwner().equals(player.getUUID())) && (!player.hasPermissions(4) || PermissionAPI.getPermission((ServerPlayer) player, ADMIN_BREAK))) {
                     event.setCanceled(true);
                 }
-            }*/
+            }
         }
     }
 }

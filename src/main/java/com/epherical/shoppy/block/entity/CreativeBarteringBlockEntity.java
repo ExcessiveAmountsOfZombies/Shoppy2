@@ -23,14 +23,18 @@ public class CreativeBarteringBlockEntity extends BarteringBlockEntity implement
     }
 
 
-
     @Override
-    public void setOwner(UUID owner) {
-
+    public int getSaleItemCount() {
+        return 100000;
     }
 
     @Override
-    public UUID getOwner() {
-        return null;
+    public int getFreeSlots() {
+        return 100000000;
+    }
+
+    @Override
+    public void addCurrencyItems(int n) {
+
     }
 }

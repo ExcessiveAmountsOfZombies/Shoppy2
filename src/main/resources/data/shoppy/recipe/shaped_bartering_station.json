@@ -26,7 +26,7 @@
     }
   },
   "result": {
-    "item": "shoppy:bartering_station",
+    "id": "shoppy:bartering_station",
     "count": 1
   }
 }

@@ -1,7 +1,6 @@
 {
   "replace": false,
   "values": [
-    "shoppy:shop_block",
     "shoppy:bartering_station"
   ]
 }

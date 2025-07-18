@@ -9,28 +9,12 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 import static com.epherical.shoppy.Shoppy.MODID;
-import static com.epherical.shoppy.client.ShoppyClient.tick;
 
 public class ShoppyClient {
-
-    @EventBusSubscriber(modid = MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
-    public static class BusEvents {
-
-
-        @SubscribeEvent
-        public static void onEndTick(ClientTickEvent.Post event) {
-            tick++;
-            if (tick == Integer.MAX_VALUE) {
-                tick = Integer.MIN_VALUE;
-            }
-        }
-
-    }
 
 
     @EventBusSubscriber(modid = MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)

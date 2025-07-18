@@ -3,6 +3,7 @@ package com.epherical.shoppy.block;
 import com.epherical.shoppy.block.entity.BarteringBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.LivingEntity;
@@ -69,10 +70,9 @@ public abstract class AbstractTradingBlock extends BaseEntityBlock implements En
     public void onRemove(BlockState blockState, Level level, BlockPos blockPos, BlockState blockState2, boolean bl) {
         if (!blockState.is(blockState2.getBlock())) {
             BlockEntity blockEntity = level.getBlockEntity(blockPos);
-            // todo; we will have to drop contents again probably
-            /*if (blockEntity instanceof AbstractTradingBlockEntity) {
-                Containers.dropContents(level, blockPos, ((AbstractTradingBlockEntity) blockEntity).dropItems());
-            }*/
+            if (blockEntity instanceof BarteringBlockEntity bbe) {
+                bbe.dropStock(level, blockPos);
+            }
         }
         super.onRemove(blockState, level, blockPos, blockState2, bl);
     }

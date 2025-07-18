@@ -15,6 +15,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.player.Inventory;
@@ -23,6 +24,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.MenuConstructor;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -54,8 +56,8 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         @Override
         public int get(int index) {
             return switch (index) {
-                case 0 -> saleItemCount;
-                case 1 -> currencyItemCount;
+                case 0 -> getSaleItemCount();
+                case 1 -> getCurrencyItemCount();
                 default -> 0;
             };
         }
@@ -63,8 +65,8 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         @Override
         public void set(int index, int value) {
             switch (index) {
-                case 0 -> saleItemCount = value;
-                case 1 -> currencyItemCount = value;
+                case 0 -> setSaleItemCount(value);
+                case 1 -> setCurrencyItemCount(value);
             }
         }
 
@@ -97,7 +99,7 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         int costQty = costCounts[offerIdx];
 
         if (saleQty <= 0 || costQty <= 0) return;
-        if (saleItemCount < saleQty) return;
+        if (getSaleItemCount() < saleQty) return;
 
 
         ItemStack currencyTemplate = new ItemStack(currency.getItem());
@@ -128,7 +130,7 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         ItemHandlerHelper.giveItemToPlayer(player, product);
 
         saleItemCount = Math.max(0, saleItemCount - saleQty);
-        currencyItemCount += costQty;
+        addCurrencyItems(costQty);
 
         setChanged();
     }
@@ -258,6 +260,15 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         return currencyItemCount;
     }
 
+
+    public void setCurrencyItemCount(int currencyItemCount) {
+        this.currencyItemCount = currencyItemCount;
+    }
+
+    public void setSaleItemCount(int saleItemCount) {
+        this.saleItemCount = saleItemCount;
+    }
+
     public void addSaleItems(int n) {
         saleItemCount += n;
         setChanged();
@@ -314,4 +325,35 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         return data;
     }
 
+
+    /**
+     * Spawns item entities for every stored sale / currency stack.
+     * Called when the block is broken or replaced.
+     */
+    public void dropStock(Level level, BlockPos pos) {
+        if (level.isClientSide) return;
+
+        dropStack(level, pos, saleItem, saleItemCount);
+        dropStack(level, pos, currency, currencyItemCount);
+
+        saleItemCount = 0;
+        currencyItemCount = 0;
+        setChanged();
+    }
+
+    private static void dropStack(Level level, BlockPos pos, ItemStack prototype, int count) {
+        if (count <= 0 || prototype.isEmpty()) return;
+
+        int max = prototype.getMaxStackSize();
+        int left = count;
+        while (left > 0) {
+            int n = Math.min(max, left);
+            ItemStack stack = prototype.copy();
+            stack.setCount(n);
+            Containers.dropItemStack(level,
+                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                    stack);
+            left -= n;
+        }
+    }
 }
