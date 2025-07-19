@@ -12,6 +12,7 @@ import com.epherical.shoppy.network.ServerPayloadHandler;
 import com.epherical.shoppy.network.payloads.PriceSubmissionPayload;
 import com.epherical.shoppy.network.payloads.PurchaseAttemptPayload;
 import com.epherical.shoppy.network.payloads.SetSaleItemPayload;
+import com.epherical.shoppy.network.payloads.StockTransferPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -195,6 +196,7 @@ public class Shoppy {
         registrar.playToServer(SetSaleItemPayload.TYPE, SetSaleItemPayload.STREAM_CODEC, ServerPayloadHandler::handle);
         registrar.playToServer(PriceSubmissionPayload.TYPE, PriceSubmissionPayload.STREAM_CODEC, ServerPayloadHandler::handle);
         registrar.playToServer(PurchaseAttemptPayload.TYPE, PurchaseAttemptPayload.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(StockTransferPayload.TYPE, StockTransferPayload.STREAM_CODEC, ServerPayloadHandler::handle);
     }
 
     @SubscribeEvent

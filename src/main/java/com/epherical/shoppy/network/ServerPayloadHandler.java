@@ -7,6 +7,7 @@ import com.epherical.shoppy.network.payloads.AddItemRequestPayload;
 import com.epherical.shoppy.network.payloads.PriceSubmissionPayload;
 import com.epherical.shoppy.network.payloads.PurchaseAttemptPayload;
 import com.epherical.shoppy.network.payloads.SetSaleItemPayload;
+import com.epherical.shoppy.network.payloads.StockTransferPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -130,5 +131,66 @@ public class ServerPayloadHandler {
         // todo; dont let owner purhcase
 
         be.tryPurchase(player, idx);
+    }
+
+
+    public static void handle(StockTransferPayload payload, IPayloadContext ctx) {
+        ServerPlayer player = (ServerPlayer) ctx.player();
+
+        if (!(player.level().getBlockEntity(payload.pos()) instanceof BarteringBlockEntity shop))
+            return;   // invalid / out-of-range
+
+        if (!shop.getOwner().equals(player.getUUID())) {
+            // don't let none owners do anything...
+            return;
+        }
+
+        boolean saleSide = payload.saleSide();
+        boolean inserting = payload.insert();
+
+        if (!saleSide && inserting) {
+            return;  // we don't want the owner inserting into
+        }
+
+
+        // resolve the template item (“what are we moving?”)
+        ItemStack template = saleSide ? shop.getSaleItem() : shop.getCurrencyItem();
+        if (template.isEmpty()) return;
+
+        int moved = 0;
+        if (inserting) {  /* player → shop ---------------------------------- */
+            int free = shop.getFreeSlots();        // max space left in the counter
+            if (free <= 0) return;
+
+            for (ItemStack inv : player.getInventory().items) {
+                if (ItemStack.isSameItem(inv, template) && inv.getCount() > 0) {
+                    int take = Math.min(inv.getCount(), free - moved);
+                    inv.shrink(take);
+                    moved += take;
+                    if (moved >= free) break;
+                }
+            }
+            if (moved == 0) return;                // nothing found
+
+            if (saleSide) shop.addSaleItems(moved);
+            else          shop.addCurrencyItems(moved);
+        } else {        /* shop → player ------------------------------------ */
+            int available = saleSide ? shop.getSaleItemCount()
+                    : shop.getCurrencyItemCount();
+            if (available <= 0) return;
+
+            moved = Math.min(available, template.getMaxStackSize());
+            ItemStack give = template.copy();
+            give.setCount(moved);
+
+            if (!player.getInventory().add(give))      // full inventory? -> drop
+                player.drop(give, false);
+
+            if (saleSide) shop.addSaleItems(-moved);
+            else          shop.addCurrencyItems(-moved);
+        }
+
+        shop.setChanged();
+        player.containerMenu.broadcastChanges();   // sync GUI counters
     }
 }

@@ -2,9 +2,11 @@ package com.epherical.shoppy.client.screens;
 
 import com.epherical.shoppy.block.entity.BarteringBlockEntity;
 import com.epherical.shoppy.client.widget.AddItemButton;
+import com.epherical.shoppy.client.widget.ShopItemWidget;
 import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
 import com.epherical.shoppy.network.payloads.AddItemRequestPayload;
 import com.epherical.shoppy.network.payloads.PriceSubmissionPayload;
+import com.epherical.shoppy.network.payloads.StockTransferPayload;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -30,15 +32,15 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
     private static final int ITEM_SIZE = 16;
 
 
-    private static final int SALE_ITEM_X      = 26;   // pixels from leftPos
-    private static final int SALE_ITEM_Y      = 48;   // pixels from topPos
-    private static final int CURRENCY_ITEM_X  = 111;
-    private static final int CURRENCY_ITEM_Y  = 133;
+    private static final int SALE_ITEM_X = 26;   // pixels from leftPos
+    private static final int SALE_ITEM_Y = 48;   // pixels from topPos
+    private static final int CURRENCY_ITEM_X = 111;
+    private static final int CURRENCY_ITEM_Y = 133;
 
-    private static final int ROW_START_Y  = 30;   // first row offset from topPos
-    private static final int ROW_HEIGHT   = 20;   // distance between rows
-    private static final int ROW_PAD_X    = 8;    // left / right padding inside BG
-    private static final int TEXT_Y_OFF   = 6;    // text offset inside a row
+    private static final int ROW_START_Y = 30;   // first row offset from topPos
+    private static final int ROW_HEIGHT = 20;   // distance between rows
+    private static final int ROW_PAD_X = 8;    // left / right padding inside BG
+    private static final int TEXT_Y_OFF = 6;    // text offset inside a row
 
     private EditBox priceField;
     private EditBox receivedField;
@@ -67,13 +69,13 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
 
         int rows = populatedRows();
         int btnX = leftPos + (imageWidth - 150) / 2;
-        int btnY = topPos  + ROW_START_Y + rows * ROW_HEIGHT;
+        int btnY = topPos + ROW_START_Y + rows * ROW_HEIGHT;
 
         if (rows < 3 && !getMenu().isEditing()) {
             addRenderableWidget(
                     AddItemButton.addItem(ADD_ITEM_BTN,
-                            b -> PacketDistributor.sendToServer(new AddItemRequestPayload(menu.getBlockPos())))
-                                 .size(68, 14).pos(btnX, btnY).build());
+                                    b -> PacketDistributor.sendToServer(new AddItemRequestPayload(menu.getBlockPos())))
+                            .size(68, 14).pos(btnX, btnY).build());
         }
 
 
@@ -101,6 +103,34 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
             minecraft.setScreen(new ShopPickingCreativeInventoryScreen(minecraft.player, this.minecraft.player.connection.enabledFeatures(), false, false));
         }).size(60, 14).pos(btnX + 98, btnY + 147 - 14 - 80).build());
 
+        ShopItemWidget saleIcon = new ShopItemWidget(
+                leftPos + CURRENCY_ITEM_X, topPos + CURRENCY_ITEM_Y - ITEM_SIZE - 72,
+                bartering::getSaleItem,
+                () -> menu.getContainerData().get(0),
+                btn -> {
+                    boolean insert = btn == 0;   // 0 = LMB ➜ insert, 1 = RMB ➜ extract
+                    PacketDistributor.sendToServer(
+                            new StockTransferPayload(bartering.getBlockPos(), true, insert));
+
+                }, Component.translatable("tooltip.shoppy.sale_item")
+                .withStyle(ChatFormatting.GRAY));
+        addRenderableWidget(saleIcon);
+
+
+        ShopItemWidget currencyIcon = new ShopItemWidget(
+                leftPos + CURRENCY_ITEM_X,
+                topPos + CURRENCY_ITEM_Y - 72,
+                bartering::getCurrencyItem,
+                () -> menu.getContainerData().get(1),
+                button -> PacketDistributor.sendToServer(
+                        new StockTransferPayload(bartering.getBlockPos(), false, false)),
+                Component.translatable("tooltip.shoppy.currency_item")
+                        .withStyle(ChatFormatting.GRAY)   // extra tooltip line
+        );
+
+        addRenderableWidget(currencyIcon);
+
+
     }
 
     @Override
@@ -111,10 +141,10 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
         this.renderTooltip(graphics, pMouseX, pMouseY);
 
         if (bartering != null) {
-            ItemStack saleStack = bartering.getSaleItem();
+            /*ItemStack saleStack = bartering.getSaleItem();
             if (!saleStack.isEmpty()) {
                 int x = left + CURRENCY_ITEM_X;
-                int y = top  + CURRENCY_ITEM_Y - ITEM_SIZE - 72;
+                int y = top + CURRENCY_ITEM_Y - ITEM_SIZE - 72;
 
                 if (isHovering(pMouseX, pMouseY, x, y)) {
                     List<Component> lines = saleStack
@@ -130,14 +160,14 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                     graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
                 }
                 graphics.renderItem(saleStack, x, y);
-                graphics.drawString(this.font, "x"+menu.getContainerData().get(0), x + 16, y + 4, 0xFFFFFF);
+                graphics.drawString(this.font, "x" + menu.getContainerData().get(0), x + 16, y + 4, 0xFFFFFF);
                 graphics.renderItemDecorations(this.font, saleStack, x, y);
             }
 
             ItemStack currencyStack = bartering.getCurrencyItem();
             if (!currencyStack.isEmpty()) {
                 int x = left + CURRENCY_ITEM_X;
-                int y = top  + CURRENCY_ITEM_Y - 72;
+                int y = top + CURRENCY_ITEM_Y - 72;
 
                 if (isHovering(pMouseX, pMouseY, x, y)) {
                     List<Component> lines = bartering.getCurrencyItem()
@@ -154,9 +184,9 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                 }
 
                 graphics.renderItem(currencyStack, x, y);
-                graphics.drawString(this.font, "x"+menu.getContainerData().get(1), x + 16, y + 4, 0xFFFFFF);
+                graphics.drawString(this.font, "x" + menu.getContainerData().get(1), x + 16, y + 4, 0xFFFFFF);
                 graphics.renderItemDecorations(this.font, currencyStack, x, y);
-            }
+            }*/
         }
 
         for (int i = 0; i < 3; i++) {
@@ -166,7 +196,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
 
             int rowY = topPos + ROW_START_Y + i * ROW_HEIGHT;
 
-            left  = leftPos + ROW_PAD_X - 2;
+            left = leftPos + ROW_PAD_X - 2;
             int right = leftPos + 110 - ROW_PAD_X;
             graphics.fill(left, rowY, right, rowY + ROW_HEIGHT - 2, 0x88000000);
 
@@ -233,7 +263,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
 
 
     private void submitOffer() {
-        int price    = safeParse(priceField.getValue());
+        int price = safeParse(priceField.getValue());
         int received = safeParse(receivedField.getValue());
 
         var payload = new PriceSubmissionPayload(populatedRows(), price, received); // offerIndex 0; adjust as needed
@@ -241,8 +271,11 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
     }
 
     private static int safeParse(String txt) {
-        try { return Integer.parseInt(txt.trim()); }
-        catch (NumberFormatException ignored) { return 0; }
+        try {
+            return Integer.parseInt(txt.trim());
+        } catch (NumberFormatException ignored) {
+            return 0;
+        }
     }
 
     private int populatedRows() {
