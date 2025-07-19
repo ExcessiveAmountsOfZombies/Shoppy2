@@ -169,7 +169,7 @@ public class Shoppy {
                 public ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
                     if (slot == 0) {
                         if (stack.isEmpty()) return ItemStack.EMPTY;
-                        if (barteringBlockEntity.getSaleItem().isEmpty() && !ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem())) return stack;
+                        if (barteringBlockEntity.getSaleItem().isEmpty() || !ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem())) return stack;
                         int free = barteringBlockEntity.getFreeSlots();
                         if (free <= 0) return stack;            // stock full
 
