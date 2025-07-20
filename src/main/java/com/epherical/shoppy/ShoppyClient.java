@@ -5,6 +5,7 @@ import com.epherical.shoppy.client.screens.BarteringScreen;
 import com.epherical.shoppy.client.screens.BarteringScreenOwner;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -17,12 +18,12 @@ import static com.epherical.shoppy.Shoppy.MODID;
 public class ShoppyClient {
 
 
-    @EventBusSubscriber(modid = MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
+    @EventBusSubscriber(modid = MODID, value = Dist.CLIENT)
     public static class GameEvents {
         @SubscribeEvent
         public static void clientSetup(FMLClientSetupEvent event) {
-            ItemBlockRenderTypes.setRenderLayer(Shoppy.BARTERING_STATION.get(), RenderType.cutout());
-            ItemBlockRenderTypes.setRenderLayer(Shoppy.CREATIVE_BARTERING_STATION.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(Shoppy.BARTERING_STATION.get(), ChunkSectionLayer.CUTOUT);
+            ItemBlockRenderTypes.setRenderLayer(Shoppy.CREATIVE_BARTERING_STATION.get(), ChunkSectionLayer.CUTOUT);
         }
 
         @SubscribeEvent

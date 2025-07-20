@@ -28,6 +28,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import org.jetbrains.annotations.Nullable;
 
@@ -105,7 +106,7 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         ItemStack currencyTemplate = new ItemStack(currency.getItem());
         int playerCurrency = 0;
 
-        for (ItemStack stack : player.getInventory().items) {
+        for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
             if (ItemStack.isSameItem(stack, currencyTemplate)) {
                 playerCurrency += stack.getCount();
                 if (playerCurrency >= costQty) break; // early exit
@@ -114,13 +115,13 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         if (playerCurrency < costQty) return;  // insufficient funds
 
         int remaining = costQty;
-        for (int i = 0; i < player.getInventory().items.size() && remaining > 0; i++) {
-            ItemStack stack = player.getInventory().items.get(i);
+        for (int i = 0; i < player.getInventory().getNonEquipmentItems().size() && remaining > 0; i++) {
+            ItemStack stack = player.getInventory().getNonEquipmentItems().get(i);
             if (!ItemStack.isSameItem(stack, currencyTemplate)) continue;
 
             int toTake = Math.min(stack.getCount(), remaining);
             stack.shrink(toTake);
-            if (stack.isEmpty()) player.getInventory().items.set(i, ItemStack.EMPTY);
+            if (stack.isEmpty()) player.getInventory().getNonEquipmentItems().set(i, ItemStack.EMPTY);
             remaining -= toTake;
         }
         if (remaining > 0) return;
@@ -134,7 +135,6 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
 
         setChanged();
     }
-
 
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
