@@ -6,24 +6,12 @@
     "OSO"
   ],
   "key": {
-    "#": {
-      "item": "minecraft:glass"
-    },
-    "W": {
-      "tag": "minecraft:wool_carpets"
-    },
-    "C": {
-      "item": "minecraft:chest"
-    },
-    "O": {
-      "item": "minecraft:oak_log"
-    },
-    "S": {
-      "item": "minecraft:smooth_stone"
-    },
-    "G": {
-      "item": "minecraft:gold_nugget"
-    }
+    "#": "minecraft:glass",
+    "W": "#minecraft:wool_carpets",
+    "C": "minecraft:chest",
+    "O": "minecraft:oak_log",
+    "S": "minecraft:smooth_stone",
+    "G": "minecraft:gold_nugget"
   },
   "result": {
     "id": "shoppy:bartering_station",

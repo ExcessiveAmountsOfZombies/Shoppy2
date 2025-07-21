@@ -8,13 +8,14 @@ import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.Nameable;
@@ -28,6 +29,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import org.jetbrains.annotations.Nullable;
@@ -136,30 +139,58 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         setChanged();
     }
 
-    @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        writeNBT(tag, registries);
+    private void writeNBT(ValueOutput out) {
+        if (!saleItem.isEmpty()) {
+            out.store("SaleItem", ItemStack.CODEC, saleItem);
+        }
+        if (!currency.isEmpty()) {
+            out.store("Currency", ItemStack.CODEC, currency);
+        }
+
+        out.putIntArray("SaleCounts", saleCounts);
+        out.putIntArray("CostCounts", costCounts);
+
+        out.putInt("SaleItemCount", saleItemCount);
+        out.putInt("CurrencyItemCount", currencyItemCount);
+
+        out.storeNullable("Owner", UUIDUtil.CODEC, owner.equals(Util.NIL_UUID) ? null : owner);
+    }
+
+    private void readNBT(ValueInput in) {
+        saleItem = in.read("SaleItem", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+        currency = in.read("Currency", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+
+        in.getIntArray("SaleCounts")
+                .ifPresent(a -> System.arraycopy(a, 0, saleCounts, 0, Math.min(3, a.length)));
+        in.getIntArray("CostCounts")
+                .ifPresent(a -> System.arraycopy(a, 0, costCounts, 0, Math.min(3, a.length)));
+
+        saleItemCount = in.getIntOr("SaleItemCount", 0);
+        currencyItemCount = in.getIntOr("CurrencyItemCount", 0);
+
+        in.read("Owner", UUIDUtil.CODEC).ifPresent(u -> owner = u);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        readNBT(tag, registries);
-    }
-
-
-    @Override
-    public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider lookupProvider) {
-        super.handleUpdateTag(tag, lookupProvider);
-        readNBT(tag, lookupProvider);
+    protected void saveAdditional(ValueOutput out) {
+        writeNBT(out);
     }
 
     @Override
-    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        CompoundTag updateTag = super.getUpdateTag(registries);
-        writeNBT(updateTag, registries);
-        return updateTag;
+    protected void loadAdditional(ValueInput in) {
+        readNBT(in);
+    }
+
+    @Override
+    public void handleUpdateTag(ValueInput in) {
+        readNBT(in);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider lookup) {
+        TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, lookup);
+        writeNBT(output);
+        return output.buildResult();
     }
 
     @Nullable
@@ -168,11 +199,9 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
-
     protected Component getDefaultName() {
         return Component.translatable("block.shoppy.bartering_station").setStyle(Style.EMPTY.withColor(ChatFormatting.WHITE));
     }
-
 
     @Nullable
     @Override
@@ -183,40 +212,6 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
             return BarteringMenu.barteringMenu(i, getBlockPos(), data);
         }
     }
-
-    private void writeNBT(CompoundTag tag, HolderLookup.Provider registries) {
-        // ContainerHelper.saveAllItems(tag, inventory, registries);   // no longer used for counts
-
-        if (!saleItem.isEmpty()) tag.put("SaleItem", saleItem.save(registries));
-        if (!currency.isEmpty()) tag.put("Currency", currency.save(registries));
-
-        tag.put("SaleCounts", new IntArrayTag(saleCounts));
-        tag.put("CostCounts", new IntArrayTag(costCounts));
-
-        tag.putInt("SaleItemCount", saleItemCount);
-        tag.putInt("CurrencyItemCount", currencyItemCount);
-
-        if (!owner.equals(Util.NIL_UUID)) tag.putUUID("Owner", owner);
-    }
-
-    private void readNBT(CompoundTag tag, HolderLookup.Provider registries) {
-
-        if (tag.contains("SaleItem"))
-            saleItem = ItemStack.parse(registries, tag.getCompound("SaleItem")).orElse(ItemStack.EMPTY);
-        if (tag.contains("Currency"))
-            currency = ItemStack.parse(registries, tag.getCompound("Currency")).orElse(ItemStack.EMPTY);
-
-        if (tag.contains("SaleCounts", IntArrayTag.TAG_INT_ARRAY))
-            System.arraycopy(tag.getIntArray("SaleCounts"), 0, saleCounts, 0, Math.min(3, tag.getIntArray("SaleCounts").length));
-        if (tag.contains("CostCounts", IntArrayTag.TAG_INT_ARRAY))
-            System.arraycopy(tag.getIntArray("CostCounts"), 0, costCounts, 0, Math.min(3, tag.getIntArray("CostCounts").length));
-
-        saleItemCount = tag.getInt("SaleItemCount");
-        currencyItemCount = tag.getInt("CurrencyItemCount");
-
-        if (tag.hasUUID("Owner")) owner = tag.getUUID("Owner");
-    }
-
 
     @Override
     public void setOwner(UUID owner) {

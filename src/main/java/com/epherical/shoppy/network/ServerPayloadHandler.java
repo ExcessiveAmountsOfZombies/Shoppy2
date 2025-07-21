@@ -61,17 +61,17 @@ public class ServerPayloadHandler {
             ItemStack copy = payload.stack().copyWithCount(1);
 
             if (bbe.getSaleItemCount() > 0 || bbe.getCurrencyItemCount() > 0) {
-                player.sendSystemMessage(Component.translatable(
-                        "message.shoppy.cannot_change_items_with_stock"));
+                player.displayClientMessage(Component.translatable(
+                        "message.shoppy.cannot_change_items_with_stock"), false);
                 return;
             }
 
             if (payload.currency()) {
                 bbe.setCurrency(copy);
-                player.sendSystemMessage(Component.literal("Set the currency item successfully"));
+                player.displayClientMessage(Component.literal("Set the currency item successfully"), false);
             } else {
                 bbe.setSaleItem(copy);
-                player.sendSystemMessage(Component.literal("Set the sale item successfully"));
+                player.displayClientMessage(Component.literal("Set the sale item successfully"), false);
             }
             bbe.setChanged();
 
@@ -162,7 +162,7 @@ public class ServerPayloadHandler {
             int free = shop.getFreeSlots();        // max space left in the counter
             if (free <= 0) return;
 
-            for (ItemStack inv : player.getInventory().items) {
+            for (ItemStack inv : player.getInventory().getNonEquipmentItems()) {
                 if (ItemStack.isSameItem(inv, template) && inv.getCount() > 0) {
                     int take = Math.min(inv.getCount(), free - moved);
                     inv.shrink(take);

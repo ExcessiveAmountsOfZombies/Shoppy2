@@ -8,6 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetSprites;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -39,11 +40,12 @@ public class AddItemButton extends Button {
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         Minecraft minecraft = Minecraft.getInstance();
-        guiGraphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
-        RenderSystem.enableBlend();
-        RenderSystem.enableDepthTest();
-        guiGraphics.blitSprite(SPRITES.get(this.active, this.isHoveredOrFocused()), this.getX(), this.getY(), this.getWidth(), this.getHeight());
-        guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        //guiGraphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
+        //RenderSystem.enableBlend();
+        //RenderSystem.enableDepthTest();
+        guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED,
+                SPRITES.get(this.active, this.isHoveredOrFocused()), this.getX(), this.getY(), this.getWidth(), this.getHeight());
+        //guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         int i = getFGColor();
         this.renderString(guiGraphics, minecraft.font, i | Mth.ceil(this.alpha * 255.0F) << 24);
     }
@@ -62,7 +64,6 @@ public class AddItemButton extends Button {
 
 
 
-    @OnlyIn(Dist.CLIENT)
     public static class Builder {
         private final Component message;
         private final Button.OnPress onPress;

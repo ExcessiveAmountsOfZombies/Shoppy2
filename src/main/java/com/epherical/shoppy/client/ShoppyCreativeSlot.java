@@ -9,6 +9,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class ShoppyCreativeSlot extends Slot {
@@ -24,7 +25,7 @@ public class ShoppyCreativeSlot extends Slot {
         Screen screen = mc.screen;
         if (screen instanceof ShopPickingCreativeInventoryScreen screen1) {
             ItemStack stack = this.getItem();
-            PacketDistributor.sendToServer(new SetSaleItemPayload(stack, screen1.isCurrency()));
+            ClientPacketDistributor.sendToServer(new SetSaleItemPayload(stack, screen1.isCurrency()));
             player.closeContainer();
         }
 

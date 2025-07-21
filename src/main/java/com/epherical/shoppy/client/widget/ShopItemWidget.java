@@ -63,7 +63,7 @@ public class ShopItemWidget extends AbstractWidget {
         // draw count
         String txt = String.valueOf(countSupplier.getAsInt());
         g.drawString(Minecraft.getInstance().font, "x"+ txt,
-                getX() + COUNT_PAD_X, getY() + TEXT_Y_OFF, 0xFFFFFF, false);
+                getX() + COUNT_PAD_X, getY() + TEXT_Y_OFF, 0xFFFFFFFF, false);
 
         // tooltip
         if (isHoveredOrFocused()) {
@@ -74,7 +74,7 @@ public class ShopItemWidget extends AbstractWidget {
                             ? TooltipFlag.Default.ADVANCED
                             : TooltipFlag.Default.NORMAL);
             lines.add(contents);
-            g.renderTooltip(Minecraft.getInstance().font,
+            g.setTooltipForNextFrame(Minecraft.getInstance().font,
                     lines, Optional.empty(), mouseX, mouseY);
         }
     }

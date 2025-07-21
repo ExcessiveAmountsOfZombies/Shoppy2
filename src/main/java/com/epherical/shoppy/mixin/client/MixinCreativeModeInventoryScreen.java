@@ -30,21 +30,21 @@ public abstract class MixinCreativeModeInventoryScreen {
     }
 
 
-    @Redirect(method = "containerTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;hasInfiniteItems()Z"))
-    public boolean shoppy$redirectInfiniteItems(MultiPlayerGameMode instance) {
+    @Redirect(method = "containerTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;hasInfiniteMaterials()Z"))
+    public boolean shoppy$redirectInfiniteItems(LocalPlayer instance) {
         if ((Object) this instanceof ShopPickingCreativeInventoryScreen) {
             return true;
         } else {
-            return instance.hasInfiniteItems();
+            return instance.hasInfiniteMaterials();
         }
     }
 
-    @Redirect(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;hasInfiniteItems()Z"))
-    public boolean shoppy$redirectInitInfiniteItems(MultiPlayerGameMode instance) {
+    @Redirect(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;hasInfiniteMaterials()Z"))
+    public boolean shoppy$redirectInitInfiniteItems(LocalPlayer instance) {
         if ((Object) this instanceof ShopPickingCreativeInventoryScreen) {
             return true;
         } else {
-            return instance.hasInfiniteItems();
+            return instance.hasInfiniteMaterials();
         }
     }
 

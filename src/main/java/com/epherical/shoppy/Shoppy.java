@@ -28,6 +28,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -72,25 +73,21 @@ public class Shoppy {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, MODID);
 
-    public static final DeferredBlock<BarteringBlock> BARTERING_STATION = BLOCKS.register("bartering_station",
-            () -> new BarteringBlock(BlockBehaviour.Properties.of().strength(2.5F, 1200F).sound(SoundType.WOOD).noOcclusion()));
+    public static final DeferredBlock<BarteringBlock> BARTERING_STATION = BLOCKS.registerBlock("bartering_station",
+            BarteringBlock::new, BlockBehaviour.Properties.of().strength(2.5F, 1200F).sound(SoundType.WOOD).noOcclusion());
+    public static final DeferredBlock<CreativeBarteringBlock> CREATIVE_BARTERING_STATION = BLOCKS.registerBlock("creative_bartering_station",
+            CreativeBarteringBlock::new, BlockBehaviour.Properties.of().strength(2.5F, 1200F).sound(SoundType.WOOD).noOcclusion());
+
+
 
     public static final DeferredItem<BlockItem> BARTERING_STATION_ITEM = ITEMS.registerSimpleBlockItem(BARTERING_STATION);
-
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<BarteringBlockEntity>> BARTERING_STATION_ENTITY =
-            BLOCK_ENTITIES.register("bartering_station", () ->
-                    BlockEntityType.Builder.of(BarteringBlockEntity::new, BARTERING_STATION.get()).build(null));
-
-
-
-    public static final DeferredBlock<CreativeBarteringBlock> CREATIVE_BARTERING_STATION = BLOCKS.register("creative_bartering_station",
-            () -> new CreativeBarteringBlock(BlockBehaviour.Properties.of().strength(2.5F, 1200F).sound(SoundType.WOOD).noOcclusion()));
-
     public static final DeferredItem<BlockItem> CREATIVE_BARTERING_STATION_ITEM = ITEMS.registerSimpleBlockItem(CREATIVE_BARTERING_STATION);
 
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<BarteringBlockEntity>> BARTERING_STATION_ENTITY =
+            BLOCK_ENTITIES.register("bartering_station", () -> new BlockEntityType<>(BarteringBlockEntity::new, BARTERING_STATION.get()));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CreativeBarteringBlockEntity>> CREATIVE_BARTERING_STATION_ENTITY =
-            BLOCK_ENTITIES.register("creative_bartering_station", () ->
-                    BlockEntityType.Builder.of(CreativeBarteringBlockEntity::new, CREATIVE_BARTERING_STATION.get()).build(null));
+            BLOCK_ENTITIES.register("creative_bartering_station", () -> new BlockEntityType<>(CreativeBarteringBlockEntity::new, CREATIVE_BARTERING_STATION.get()));
 
 
 

@@ -4,7 +4,8 @@ package com.epherical.shoppy.mixin.client;
 import com.epherical.shoppy.client.ShoppyCreativeSlot;
 import com.epherical.shoppy.client.CustomItemPickerMenu;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,20 +28,17 @@ public class MixinItemPickerMenu {
         return slot;
     }
 
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/CreativeModeInventoryScreen$ItemPickerMenu;addSlot(Lnet/minecraft/world/inventory/Slot;)Lnet/minecraft/world/inventory/Slot;", ordinal = 1))
-    public Slot shoppy$useMySlotsStill(CreativeModeInventoryScreen.ItemPickerMenu instance, Slot slot) {
+    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/CreativeModeInventoryScreen$ItemPickerMenu;addInventoryHotbarSlots(Lnet/minecraft/world/Container;II)V"))
+    public void shoppy$useMySlotsStill(CreativeModeInventoryScreen.ItemPickerMenu instance, Container container, int x, int y) {
         AccessorAbstractContainerMenu menu = (AccessorAbstractContainerMenu) instance;
         if (instance instanceof CustomItemPickerMenu) {
-
-            return menu.invokeAddSlot(new ShoppyCreativeSlot(slot.container, slot.getSlotIndex(), slot.x, slot.y));
+            for (int i = 0; i < 9; i++) {
+                menu.invokeAddSlot(new ShoppyCreativeSlot(container, i, x + i * 18, y));
+            }
         } else {
-            menu.invokeAddSlot(slot);
+            for (int i = 0; i < 9; i++) {
+                menu.invokeAddSlot(new Slot(container, i, x + i * 18, y));
+            }
         }
-
-        return slot;
     }
-
-
-
-
 }

@@ -14,13 +14,15 @@ import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.BeaconScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,7 +51,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
     private BarteringBlockEntity bartering;
 
     public static final ResourceLocation CONTAINER_BACKGROUND =
-            ResourceLocation.fromNamespaceAndPath(MODID, "textures/gui/sprites/container/bartering_page_owner.png");
+            ResourceLocation.fromNamespaceAndPath(MODID, "textures/gui/container/bartering_page_owner.png");
 
 
     private static final Component ADD_ITEM_BTN = Component.translatable("screen.shoppy.add_price");
@@ -74,7 +76,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
         if (rows < 3 && !getMenu().isEditing()) {
             addRenderableWidget(
                     AddItemButton.addItem(ADD_ITEM_BTN,
-                                    b -> PacketDistributor.sendToServer(new AddItemRequestPayload(menu.getBlockPos())))
+                                    b -> ClientPacketDistributor.sendToServer(new AddItemRequestPayload(menu.getBlockPos())))
                             .size(68, 14).pos(btnX, btnY).build());
         }
 
@@ -109,7 +111,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                 () -> menu.getContainerData().get(0),
                 btn -> {
                     boolean insert = btn == 0;   // 0 = LMB ➜ insert, 1 = RMB ➜ extract
-                    PacketDistributor.sendToServer(
+                    ClientPacketDistributor.sendToServer(
                             new StockTransferPayload(bartering.getBlockPos(), true, insert));
 
                 }, Component.translatable("tooltip.shoppy.sale_item")
@@ -122,7 +124,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                 topPos + CURRENCY_ITEM_Y - 72,
                 bartering::getCurrencyItem,
                 () -> menu.getContainerData().get(1),
-                button -> PacketDistributor.sendToServer(
+                button -> ClientPacketDistributor.sendToServer(
                         new StockTransferPayload(bartering.getBlockPos(), false, false)),
                 Component.translatable("tooltip.shoppy.currency_item")
                         .withStyle(ChatFormatting.GRAY)   // extra tooltip line
@@ -204,7 +206,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
             if (!saleItem.isEmpty()) {
                 graphics.renderItem(saleItem, left + 4, rowY + 1);
                 graphics.drawString(minecraft.font, String.valueOf(saleCnt),
-                        left + 4 + ITEM_SIZE + 4, rowY + TEXT_Y_OFF, 0xFFFFFF, false);
+                        left + 4 + ITEM_SIZE + 4, rowY + TEXT_Y_OFF, 0xFFFFFFFF, false);
 
 
                 if (isHovering(pMouseX, pMouseY, left + 4, rowY + 1)) {
@@ -218,7 +220,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
 
                     lines.add(Component.translatable("tooltip.shoppy.sale_item")
                             .withStyle(ChatFormatting.GRAY));
-                    graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
+                    graphics.setTooltipForNextFrame(this.font, lines, Optional.empty(), pMouseX, pMouseY);
                 }
 
             }
@@ -228,7 +230,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                 int curX = right - ITEM_SIZE - 40;
                 graphics.renderItem(curItem, curX, rowY + 1);
                 graphics.drawString(minecraft.font, String.valueOf(costCnt),
-                        curX + ITEM_SIZE + 4, rowY + TEXT_Y_OFF, 0xFFFFFF, false);
+                        curX + ITEM_SIZE + 4, rowY + TEXT_Y_OFF, 0xFFFFFFFF, false);
 
                 if (isHovering(pMouseX, pMouseY, curX, rowY + 1)) {
                     List<Component> lines = bartering.getCurrencyItem()
@@ -241,7 +243,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
 
                     lines.add(Component.translatable("tooltip.shoppy.currency_item")
                             .withStyle(ChatFormatting.GRAY));
-                    graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
+                    graphics.setTooltipForNextFrame(this.font, lines, Optional.empty(), pMouseX, pMouseY);
                 }
             }
         }
@@ -255,10 +257,9 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
 
     @Override
     protected void renderBg(GuiGraphics graphics, float pPartialTick, int pMouseX, int pMouseY) {
-        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         int left = leftPos;
         int top = topPos;
-        graphics.blit(CONTAINER_BACKGROUND, left, top, 0, 0, 176, 191);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, CONTAINER_BACKGROUND, left, top, 0.0F, 0.0F, 176, 191, 256, 256);
     }
 
 
@@ -267,7 +268,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
         int received = safeParse(receivedField.getValue());
 
         var payload = new PriceSubmissionPayload(populatedRows(), price, received); // offerIndex 0; adjust as needed
-        PacketDistributor.sendToServer(payload);
+        ClientPacketDistributor.sendToServer(payload);
     }
 
     private static int safeParse(String txt) {
