@@ -2,6 +2,8 @@ package com.epherical.shoppy.client.screens;
 
 import com.epherical.shoppy.block.entity.BarteringBlockEntity;
 import com.epherical.shoppy.client.widget.AddItemButton;
+import com.epherical.shoppy.client.widget.ExtractToggleButton;
+import com.epherical.shoppy.client.widget.InsertToggleButton;
 import com.epherical.shoppy.client.widget.ShopItemWidget;
 import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
 import com.epherical.shoppy.network.payloads.AddItemRequestPayload;
@@ -64,8 +66,15 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
     protected void init() {
         super.init();
 
-
         bartering = (BarteringBlockEntity) minecraft.level.getBlockEntity(menu.getBlockPos());
+
+        int toggleX = leftPos + imageWidth - 66;
+        int toggleY = topPos + 5;
+        addRenderableWidget(new ExtractToggleButton(toggleX, toggleY, bartering));
+
+        int insertX = leftPos + imageWidth - 49;
+        int insertY = topPos + 5;
+        addRenderableWidget(new InsertToggleButton(insertX, insertY, bartering));
 
         int rows = populatedRows();
         int btnX = leftPos + (imageWidth - 150) / 2;
@@ -141,107 +150,60 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
         this.renderTooltip(graphics, pMouseX, pMouseY);
 
         if (bartering != null) {
-            /*ItemStack saleStack = bartering.getSaleItem();
-            if (!saleStack.isEmpty()) {
-                int x = left + CURRENCY_ITEM_X;
-                int y = top + CURRENCY_ITEM_Y - ITEM_SIZE - 72;
+            for (int i = 0; i < 3; i++) {
+                int saleCnt = bartering.getSaleCount(i);
+                int costCnt = bartering.getCostCount(i);
+                if (saleCnt == 0 && costCnt == 0) continue;
 
-                if (isHovering(pMouseX, pMouseY, x, y)) {
-                    List<Component> lines = saleStack
-                            .getTooltipLines(
-                                    Item.TooltipContext.of(minecraft.player.level()),
-                                    minecraft.player,
-                                    minecraft.options.advancedItemTooltips
-                                            ? TooltipFlag.Default.ADVANCED
-                                            : TooltipFlag.Default.NORMAL);
+                int rowY = topPos + ROW_START_Y + i * ROW_HEIGHT;
 
-                    lines.add(Component.translatable("tooltip.shoppy.sale_item")
-                            .withStyle(ChatFormatting.GRAY));
-                    graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
-                }
-                graphics.renderItem(saleStack, x, y);
-                graphics.drawString(this.font, "x" + menu.getContainerData().get(0), x + 16, y + 4, 0xFFFFFF);
-                graphics.renderItemDecorations(this.font, saleStack, x, y);
-            }
+                left = leftPos + ROW_PAD_X - 2;
+                int right = leftPos + 110 - ROW_PAD_X;
+                graphics.fill(left, rowY, right, rowY + ROW_HEIGHT - 2, 0x88000000);
 
-            ItemStack currencyStack = bartering.getCurrencyItem();
-            if (!currencyStack.isEmpty()) {
-                int x = left + CURRENCY_ITEM_X;
-                int y = top + CURRENCY_ITEM_Y - 72;
+                ItemStack saleItem = bartering.getSaleItem();
+                if (!saleItem.isEmpty()) {
+                    graphics.renderItem(saleItem, left + 4, rowY + 1);
+                    graphics.drawString(minecraft.font, String.valueOf(saleCnt),
+                            left + 4 + ITEM_SIZE + 4, rowY + TEXT_Y_OFF, 0xFFFFFF, false);
 
-                if (isHovering(pMouseX, pMouseY, x, y)) {
-                    List<Component> lines = bartering.getCurrencyItem()
-                            .getTooltipLines(
-                                    Item.TooltipContext.of(minecraft.player.level()),
-                                    minecraft.player,
-                                    minecraft.options.advancedItemTooltips
-                                            ? TooltipFlag.Default.ADVANCED
-                                            : TooltipFlag.Default.NORMAL);
 
-                    lines.add(Component.translatable("tooltip.shoppy.currency_item")
-                            .withStyle(ChatFormatting.GRAY));
-                    graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
+                    if (isHovering(pMouseX, pMouseY, left + 4, rowY + 1)) {
+                        List<Component> lines = bartering.getSaleItem()
+                                .getTooltipLines(
+                                        Item.TooltipContext.of(minecraft.player.level()),
+                                        minecraft.player,
+                                        minecraft.options.advancedItemTooltips
+                                                ? TooltipFlag.Default.ADVANCED
+                                                : TooltipFlag.Default.NORMAL);
+
+                        lines.add(Component.translatable("tooltip.shoppy.sale_item")
+                                .withStyle(ChatFormatting.GRAY));
+                        graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
+                    }
+
                 }
 
-                graphics.renderItem(currencyStack, x, y);
-                graphics.drawString(this.font, "x" + menu.getContainerData().get(1), x + 16, y + 4, 0xFFFFFF);
-                graphics.renderItemDecorations(this.font, currencyStack, x, y);
-            }*/
-        }
+                ItemStack curItem = bartering.getCurrencyItem();
+                if (!curItem.isEmpty()) {
+                    int curX = right - ITEM_SIZE - 40;
+                    graphics.renderItem(curItem, curX, rowY + 1);
+                    graphics.drawString(minecraft.font, String.valueOf(costCnt),
+                            curX + ITEM_SIZE + 4, rowY + TEXT_Y_OFF, 0xFFFFFF, false);
 
-        for (int i = 0; i < 3; i++) {
-            int saleCnt = bartering.getSaleCount(i);
-            int costCnt = bartering.getCostCount(i);
-            if (saleCnt == 0 && costCnt == 0) continue;
+                    if (isHovering(pMouseX, pMouseY, curX, rowY + 1)) {
+                        List<Component> lines = bartering.getCurrencyItem()
+                                .getTooltipLines(
+                                        Item.TooltipContext.of(minecraft.player.level()),
+                                        minecraft.player,
+                                        minecraft.options.advancedItemTooltips
+                                                ? TooltipFlag.Default.ADVANCED
+                                                : TooltipFlag.Default.NORMAL);
 
-            int rowY = topPos + ROW_START_Y + i * ROW_HEIGHT;
-
-            left = leftPos + ROW_PAD_X - 2;
-            int right = leftPos + 110 - ROW_PAD_X;
-            graphics.fill(left, rowY, right, rowY + ROW_HEIGHT - 2, 0x88000000);
-
-            ItemStack saleItem = bartering.getSaleItem();
-            if (!saleItem.isEmpty()) {
-                graphics.renderItem(saleItem, left + 4, rowY + 1);
-                graphics.drawString(minecraft.font, String.valueOf(saleCnt),
-                        left + 4 + ITEM_SIZE + 4, rowY + TEXT_Y_OFF, 0xFFFFFF, false);
-
-
-                if (isHovering(pMouseX, pMouseY, left + 4, rowY + 1)) {
-                    List<Component> lines = bartering.getSaleItem()
-                            .getTooltipLines(
-                                    Item.TooltipContext.of(minecraft.player.level()),
-                                    minecraft.player,
-                                    minecraft.options.advancedItemTooltips
-                                            ? TooltipFlag.Default.ADVANCED
-                                            : TooltipFlag.Default.NORMAL);
-
-                    lines.add(Component.translatable("tooltip.shoppy.sale_item")
-                            .withStyle(ChatFormatting.GRAY));
-                    graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
-                }
-
-            }
-
-            ItemStack curItem = bartering.getCurrencyItem();
-            if (!curItem.isEmpty()) {
-                int curX = right - ITEM_SIZE - 40;
-                graphics.renderItem(curItem, curX, rowY + 1);
-                graphics.drawString(minecraft.font, String.valueOf(costCnt),
-                        curX + ITEM_SIZE + 4, rowY + TEXT_Y_OFF, 0xFFFFFF, false);
-
-                if (isHovering(pMouseX, pMouseY, curX, rowY + 1)) {
-                    List<Component> lines = bartering.getCurrencyItem()
-                            .getTooltipLines(
-                                    Item.TooltipContext.of(minecraft.player.level()),
-                                    minecraft.player,
-                                    minecraft.options.advancedItemTooltips
-                                            ? TooltipFlag.Default.ADVANCED
-                                            : TooltipFlag.Default.NORMAL);
-
-                    lines.add(Component.translatable("tooltip.shoppy.currency_item")
-                            .withStyle(ChatFormatting.GRAY));
-                    graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
+                        lines.add(Component.translatable("tooltip.shoppy.currency_item")
+                                .withStyle(ChatFormatting.GRAY));
+                        graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
+                    }
                 }
             }
         }

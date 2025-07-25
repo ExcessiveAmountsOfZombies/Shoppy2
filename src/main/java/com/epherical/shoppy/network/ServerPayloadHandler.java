@@ -8,6 +8,7 @@ import com.epherical.shoppy.network.payloads.PriceSubmissionPayload;
 import com.epherical.shoppy.network.payloads.PurchaseAttemptPayload;
 import com.epherical.shoppy.network.payloads.SetSaleItemPayload;
 import com.epherical.shoppy.network.payloads.StockTransferPayload;
+import com.epherical.shoppy.network.payloads.ToggleAutomationPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -193,4 +194,23 @@ public class ServerPayloadHandler {
         shop.setChanged();
         player.containerMenu.broadcastChanges();   // sync GUI counters
     }
+
+    public static void handle(ToggleAutomationPayload payload, IPayloadContext ctx) {
+        ServerPlayer player = (ServerPlayer) ctx.player();
+
+        if (!(player.level().getBlockEntity(payload.pos()) instanceof BarteringBlockEntity shop))
+            return;                                // no / wrong block entity
+
+        if (!shop.getOwner().equals(player.getUUID()))
+            return;                                // only the owner may toggle
+
+        switch (payload.target()) {
+            case INSERT  -> shop.setAllowInsert(!shop.isInsertAllowed());
+            case EXTRACT -> shop.setAllowExtract(!shop.isExtractAllowed());
+        }
+
+        shop.setChanged();
+        player.connection.send(shop.getUpdatePacket());   // instant GUI refresh
+    }
+
 }

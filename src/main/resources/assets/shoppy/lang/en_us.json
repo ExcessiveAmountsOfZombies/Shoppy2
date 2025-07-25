@@ -82,5 +82,10 @@
   "tooltip.shoppy.sale_item": "I will give you these.",
   "tooltip.shoppy.sale_stock": "Current Stock",
   "screen.shoppy.confirm": "Confirm",
-  "message.shoppy.cannot_change_items_with_stock": "You must empty the shop before changing any items."
+  "message.shoppy.cannot_change_items_with_stock": "You must empty the shop before changing any items.",
+
+  "tooltip.shoppy.insert_enabled": "Insertion Enabled",
+  "tooltip.shoppy.insert_disabled": "Insertion Disabled",
+  "tooltip.shoppy.extract_enabled": "Extract Enabled",
+  "tooltip.shoppy.extract_disabled": "Extract Disabled"
 }

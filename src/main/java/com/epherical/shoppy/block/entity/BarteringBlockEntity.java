@@ -48,6 +48,9 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
 
     protected UUID owner = Util.NIL_UUID;
 
+    private boolean allowInsert = true;
+    private boolean allowExtract = true;
+
 
     private static final int SLOTS = 1024;
 
@@ -196,6 +199,10 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         tag.putInt("SaleItemCount", saleItemCount);
         tag.putInt("CurrencyItemCount", currencyItemCount);
 
+        tag.putBoolean("AllowInsert",  allowInsert);
+        tag.putBoolean("AllowExtract", allowExtract);
+
+
         if (!owner.equals(Util.NIL_UUID)) tag.putUUID("Owner", owner);
     }
 
@@ -213,6 +220,10 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
 
         saleItemCount = tag.getInt("SaleItemCount");
         currencyItemCount = tag.getInt("CurrencyItemCount");
+
+        allowInsert  = tag.getBoolean("AllowInsert");
+        allowExtract = tag.getBoolean("AllowExtract");
+
 
         if (tag.hasUUID("Owner")) owner = tag.getUUID("Owner");
     }
@@ -323,6 +334,22 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
 
     public ContainerData getContainerData() {
         return data;
+    }
+
+    public boolean isInsertAllowed() {
+        return allowInsert;
+    }
+
+    public boolean isExtractAllowed() {
+        return allowExtract;
+    }
+
+    public void setAllowInsert(boolean value) {
+        allowInsert = value;
+    }
+
+    public void setAllowExtract(boolean value) {
+        allowExtract = value;
     }
 
 

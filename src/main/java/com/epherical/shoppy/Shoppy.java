@@ -7,18 +7,18 @@ import com.epherical.shoppy.block.entity.CreativeBarteringBlockEntity;
 import com.epherical.shoppy.commands.ShopOwnerCommand;
 import com.epherical.shoppy.menu.bartering.BarteringMenu;
 import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
-import com.epherical.shoppy.network.payloads.AddItemRequestPayload;
 import com.epherical.shoppy.network.ServerPayloadHandler;
+import com.epherical.shoppy.network.payloads.AddItemRequestPayload;
 import com.epherical.shoppy.network.payloads.PriceSubmissionPayload;
 import com.epherical.shoppy.network.payloads.PurchaseAttemptPayload;
 import com.epherical.shoppy.network.payloads.SetSaleItemPayload;
 import com.epherical.shoppy.network.payloads.StockTransferPayload;
+import com.epherical.shoppy.network.payloads.ToggleAutomationPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.commands.SetBlockCommand;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -37,14 +37,12 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.network.IContainerFactory;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -82,7 +80,6 @@ public class Shoppy {
                     BlockEntityType.Builder.of(BarteringBlockEntity::new, BARTERING_STATION.get()).build(null));
 
 
-
     public static final DeferredBlock<CreativeBarteringBlock> CREATIVE_BARTERING_STATION = BLOCKS.register("creative_bartering_station",
             () -> new CreativeBarteringBlock(BlockBehaviour.Properties.of().strength(2.5F, 1200F).sound(SoundType.WOOD).noOcclusion()));
 
@@ -91,7 +88,6 @@ public class Shoppy {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CreativeBarteringBlockEntity>> CREATIVE_BARTERING_STATION_ENTITY =
             BLOCK_ENTITIES.register("creative_bartering_station", () ->
                     BlockEntityType.Builder.of(CreativeBarteringBlockEntity::new, CREATIVE_BARTERING_STATION.get()).build(null));
-
 
 
     public static final DeferredHolder<MenuType<?>, MenuType<BarteringMenu>> BARTERING_MENU =
@@ -113,10 +109,9 @@ public class Shoppy {
                     .withTabsBefore(CreativeModeTabs.COMBAT)
                     .icon(() -> BARTERING_STATION_ITEM.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
-        output.accept(BARTERING_STATION.get());
-        output.accept(CREATIVE_BARTERING_STATION_ITEM.get());
-    }).build());
-
+                        output.accept(BARTERING_STATION.get());
+                        output.accept(CREATIVE_BARTERING_STATION_ITEM.get());
+                    }).build());
 
 
     public Shoppy(IEventBus modEventBus, ModContainer modContainer) {
@@ -144,14 +139,17 @@ public class Shoppy {
                 @Override
                 public boolean isItemValid(int slot, @NotNull ItemStack stack) {
                     return switch (slot) {
-                        case 0 -> ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem());     // only sale item may be inserted
-                        case 1 -> false;                                                               // revenue slot never accepts input
+                        case 0 ->
+                                ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem());     // only sale item may be inserted
+                        case 1 ->
+                                false;                                                               // revenue slot never accepts input
                         default -> false;
                     };
                 }
 
                 @Override
                 public ItemStack extractItem(int slot, int amount, boolean simulate) {
+                    if (!barteringBlockEntity.isExtractAllowed()) return ItemStack.EMPTY; // refuse
                     if (slot == 1 && barteringBlockEntity.getCurrencyItemCount() > 0 && amount > 0) {
                         int taken = Math.min(amount, barteringBlockEntity.getCurrencyItemCount());
                         if (!simulate) {
@@ -167,9 +165,11 @@ public class Shoppy {
 
                 @Override
                 public ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
+                    if (!barteringBlockEntity.isInsertAllowed()) return stack;
                     if (slot == 0) {
                         if (stack.isEmpty()) return ItemStack.EMPTY;
-                        if (barteringBlockEntity.getSaleItem().isEmpty() || !ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem())) return stack;
+                        if (barteringBlockEntity.getSaleItem().isEmpty() || !ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem()))
+                            return stack;
                         int free = barteringBlockEntity.getFreeSlots();
                         if (free <= 0) return stack;            // stock full
 
@@ -190,13 +190,14 @@ public class Shoppy {
 
 
     public void registerNetworkPayloads(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("1")
+        final PayloadRegistrar registrar = event.registrar("2")
                 .executesOn(HandlerThread.MAIN);
         registrar.playToServer(AddItemRequestPayload.TYPE, AddItemRequestPayload.STREAM_CODEC, ServerPayloadHandler::handle);
         registrar.playToServer(SetSaleItemPayload.TYPE, SetSaleItemPayload.STREAM_CODEC, ServerPayloadHandler::handle);
         registrar.playToServer(PriceSubmissionPayload.TYPE, PriceSubmissionPayload.STREAM_CODEC, ServerPayloadHandler::handle);
         registrar.playToServer(PurchaseAttemptPayload.TYPE, PurchaseAttemptPayload.STREAM_CODEC, ServerPayloadHandler::handle);
         registrar.playToServer(StockTransferPayload.TYPE, StockTransferPayload.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(ToggleAutomationPayload.TYPE, ToggleAutomationPayload.STREAM_CODEC, ServerPayloadHandler::handle);
     }
 
     @SubscribeEvent
