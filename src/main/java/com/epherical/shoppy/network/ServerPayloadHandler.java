@@ -11,12 +11,18 @@ import com.epherical.shoppy.network.payloads.StockTransferPayload;
 import com.epherical.shoppy.network.payloads.ToggleAutomationPayload;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.slf4j.Logger;
+
+import java.util.List;
 
 public class ServerPayloadHandler {
 
@@ -78,7 +84,18 @@ public class ServerPayloadHandler {
 
             ServerPlayer player1 = (ServerPlayer) player;
             player.closeContainer();
-            player1.connection.send(bbe.getUpdatePacket());
+
+            broadcastUpdate(bbe, player1);
+        }
+    }
+
+    private static void broadcastUpdate(BarteringBlockEntity bbe, ServerPlayer player1) {
+        ServerLevel level = (ServerLevel) player1.level();
+        ChunkPos pos = new ChunkPos(bbe.getBlockPos());
+        List<ServerPlayer> players = level.getChunkSource().chunkMap.getPlayers(pos, false);
+        for (ServerPlayer serverPlayer : players) {
+            Packet<ClientGamePacketListener> updatePacket = bbe.getUpdatePacket();
+            serverPlayer.connection.send(updatePacket);
         }
     }
 
@@ -109,7 +126,8 @@ public class ServerPayloadHandler {
         ServerPlayer player1 = (ServerPlayer) player;
 
         menu.setEditing(false);
-        player1.connection.send(bbe.getUpdatePacket());
+
+        broadcastUpdate(bbe, player1);
 
 
         MenuProvider menuProvider = bbe.getBlockState().getMenuProvider(player1.level(), bbe.getBlockPos());
@@ -132,6 +150,9 @@ public class ServerPayloadHandler {
         // todo; dont let owner purhcase
 
         be.tryPurchase(player, idx);
+
+        broadcastUpdate(be, player);
+
     }
 
 
@@ -193,6 +214,8 @@ public class ServerPayloadHandler {
 
         shop.setChanged();
         player.containerMenu.broadcastChanges();   // sync GUI counters
+
+        broadcastUpdate(shop, player);
     }
 
     public static void handle(ToggleAutomationPayload payload, IPayloadContext ctx) {
@@ -210,7 +233,8 @@ public class ServerPayloadHandler {
         }
 
         shop.setChanged();
-        player.connection.send(shop.getUpdatePacket());   // instant GUI refresh
+
+        broadcastUpdate(shop, player);
     }
 
 }
