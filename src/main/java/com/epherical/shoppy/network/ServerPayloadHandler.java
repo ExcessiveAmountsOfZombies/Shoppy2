@@ -1,6 +1,7 @@
 package com.epherical.shoppy.network;
 
 import com.epherical.shoppy.block.entity.BarteringBlockEntity;
+import com.epherical.shoppy.block.entity.CreativeBarteringBlockEntity;
 import com.epherical.shoppy.menu.bartering.BarteringMenu;
 import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
 import com.epherical.shoppy.network.payloads.AddItemRequestPayload;
@@ -67,7 +68,7 @@ public class ServerPayloadHandler {
 
             ItemStack copy = payload.stack().copyWithCount(1);
 
-            if (bbe.getSaleItemCount() > 0 || bbe.getCurrencyItemCount() > 0) {
+            if ((bbe.getSaleItemCount() > 0 || bbe.getCurrencyItemCount() > 0) && !(bbe instanceof CreativeBarteringBlockEntity)) {
                 player.sendSystemMessage(Component.translatable(
                         "message.shoppy.cannot_change_items_with_stock"));
                 return;
