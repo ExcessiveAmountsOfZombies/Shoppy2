@@ -23,12 +23,16 @@ public class ShoppyClient {
         public static void clientSetup(FMLClientSetupEvent event) {
             ItemBlockRenderTypes.setRenderLayer(Shoppy.BARTERING_STATION.get(), RenderType.cutout());
             ItemBlockRenderTypes.setRenderLayer(Shoppy.CREATIVE_BARTERING_STATION.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(Shoppy.TRADING_SHOP.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(Shoppy.CREATIVE_TRADING_SHOP.get(), RenderType.cutout());
         }
 
         @SubscribeEvent
         public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
             event.registerBlockEntityRenderer(Shoppy.BARTERING_STATION_ENTITY.get(), BarteringBlockRenderer::new);
             event.registerBlockEntityRenderer(Shoppy.CREATIVE_BARTERING_STATION_ENTITY.get(), BarteringBlockRenderer::new);
+            event.registerBlockEntityRenderer(Shoppy.TRADING_SHOP_ENTITY.get(), BarteringBlockRenderer::new);
+            event.registerBlockEntityRenderer(Shoppy.CREATIVE_TRADING_SHOP_ENTITY.get(), BarteringBlockRenderer::new);
         }
 
 

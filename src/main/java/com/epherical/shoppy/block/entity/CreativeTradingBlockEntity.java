@@ -8,18 +8,16 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
-public class CreativeBarteringBlockEntity extends BarteringBlockEntity implements Ownable {
+public class CreativeTradingBlockEntity extends TradingBlockEntity {
 
-
-    public CreativeBarteringBlockEntity(BlockPos blockPos, BlockState blockState) {
-        super(Shoppy.CREATIVE_BARTERING_STATION_ENTITY.get(), blockPos, blockState);
+    public CreativeTradingBlockEntity(BlockPos blockPos, BlockState blockState) {
+        super(Shoppy.CREATIVE_TRADING_SHOP_ENTITY.get(), blockPos, blockState);
     }
 
     @Override
     protected @Nullable Component getDefaultName() {
-        return Component.translatable("block.shoppy.creative_bartering_station").setStyle(Style.EMPTY.withColor(ChatFormatting.WHITE));
+        return Component.translatable("block.shoppy.creative_trading_shop").setStyle(Style.EMPTY.withColor(ChatFormatting.WHITE));
     }
-
 
     @Override
     public int getSaleItemCount() {
@@ -32,13 +30,14 @@ public class CreativeBarteringBlockEntity extends BarteringBlockEntity implement
     }
 
     @Override
-    public void addSaleItems(int n) {}
+    public void addSaleItems(int n) {
+        // Infinite stock.
+    }
 
     @Override
-    public void removeSaleItems(int n) {}
-
-    @Override
-    public void addCurrencyItems(int n) {}
+    public void removeSaleItems(int n) {
+        // Infinite stock.
+    }
 
     @Override
     public boolean hasUnlimitedStock() {

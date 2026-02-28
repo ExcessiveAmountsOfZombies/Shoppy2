@@ -2,9 +2,14 @@ package com.epherical.shoppy;
 
 import com.epherical.shoppy.block.BarteringBlock;
 import com.epherical.shoppy.block.CreativeBarteringBlock;
+import com.epherical.shoppy.block.CreativeTradingBlock;
+import com.epherical.shoppy.block.TradingBlock;
 import com.epherical.shoppy.block.entity.BarteringBlockEntity;
 import com.epherical.shoppy.block.entity.CreativeBarteringBlockEntity;
+import com.epherical.shoppy.block.entity.CreativeTradingBlockEntity;
+import com.epherical.shoppy.block.entity.TradingBlockEntity;
 import com.epherical.shoppy.commands.ShopOwnerCommand;
+import com.epherical.shoppy.compat.eights.EightsEconomyCompat;
 import com.epherical.shoppy.menu.bartering.BarteringMenu;
 import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
 import com.epherical.shoppy.network.ServerPayloadHandler;
@@ -35,6 +40,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -89,6 +95,24 @@ public class Shoppy {
             BLOCK_ENTITIES.register("creative_bartering_station", () ->
                     BlockEntityType.Builder.of(CreativeBarteringBlockEntity::new, CREATIVE_BARTERING_STATION.get()).build(null));
 
+    public static final DeferredBlock<TradingBlock> TRADING_SHOP = BLOCKS.register("trading_shop",
+            () -> new TradingBlock(BlockBehaviour.Properties.of().strength(2.5F, 1200F).sound(SoundType.WOOD).noOcclusion()));
+
+    public static final DeferredItem<BlockItem> TRADING_SHOP_ITEM = ITEMS.registerSimpleBlockItem(TRADING_SHOP);
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TradingBlockEntity>> TRADING_SHOP_ENTITY =
+            BLOCK_ENTITIES.register("trading_shop", () ->
+                    BlockEntityType.Builder.of(TradingBlockEntity::new, TRADING_SHOP.get()).build(null));
+
+    public static final DeferredBlock<CreativeTradingBlock> CREATIVE_TRADING_SHOP = BLOCKS.register("creative_trading_shop",
+            () -> new CreativeTradingBlock(BlockBehaviour.Properties.of().strength(2.5F, 1200F).sound(SoundType.WOOD).noOcclusion()));
+
+    public static final DeferredItem<BlockItem> CREATIVE_TRADING_SHOP_ITEM = ITEMS.registerSimpleBlockItem(CREATIVE_TRADING_SHOP);
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CreativeTradingBlockEntity>> CREATIVE_TRADING_SHOP_ENTITY =
+            BLOCK_ENTITIES.register("creative_trading_shop", () ->
+                    BlockEntityType.Builder.of(CreativeTradingBlockEntity::new, CREATIVE_TRADING_SHOP.get()).build(null));
+
 
     public static final DeferredHolder<MenuType<?>, MenuType<BarteringMenu>> BARTERING_MENU =
             MENU_TYPES.register("bartering_menu", () -> new MenuType<>(
@@ -111,6 +135,8 @@ public class Shoppy {
                     .displayItems((parameters, output) -> {
                         output.accept(BARTERING_STATION.get());
                         output.accept(CREATIVE_BARTERING_STATION_ITEM.get());
+                        output.accept(TRADING_SHOP.get());
+                        output.accept(CREATIVE_TRADING_SHOP_ITEM.get());
                     }).build());
 
 
@@ -124,6 +150,17 @@ public class Shoppy {
         BLOCK_ENTITIES.register(modEventBus);
         MENU_TYPES.register(modEventBus);
 
+
+
+        //new FTBChunksCompat();
+        if (ModList.get().isLoaded(EightsEconomyCompat.MOD_ID)) {
+            try {
+                EightsEconomyCompat.register();
+            } catch (Throwable throwable) {
+                LOGGER.error("Unable to initialize EightsEconomyP compatibility", throwable);
+            }
+        }
+
         NeoForge.EVENT_BUS.register(this);
     }
 
@@ -132,60 +169,93 @@ public class Shoppy {
     }
 
     public void onCapability(RegisterCapabilitiesEvent event) {
-        event.registerBlock(Capabilities.ItemHandler.BLOCK, (level, pos, state, blockEntity, context) -> {
-            BarteringBlockEntity barteringBlockEntity = (BarteringBlockEntity) blockEntity;
-            NonNullList<ItemStack> inventory = barteringBlockEntity.getInventory();
-            return new ItemStackHandler(inventory) {
-                @Override
-                public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-                    return switch (slot) {
-                        case 0 ->
-                                ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem());     // only sale item may be inserted
-                        case 1 ->
+        event.registerBlock(Capabilities.ItemHandler.BLOCK, (level, pos, state, blockEntity, context) ->
+                        createAutomationItemHandler(blockEntity),
+                BARTERING_STATION.get());
+        event.registerBlock(Capabilities.ItemHandler.BLOCK, (level, pos, state, blockEntity, context) ->
+                        createAutomationItemHandler(blockEntity),
+                CREATIVE_BARTERING_STATION.get());
+        event.registerBlock(Capabilities.ItemHandler.BLOCK, (level, pos, state, blockEntity, context) ->
+                        createAutomationItemHandler(blockEntity),
+                TRADING_SHOP.get());
+        event.registerBlock(Capabilities.ItemHandler.BLOCK, (level, pos, state, blockEntity, context) ->
+                        createAutomationItemHandler(blockEntity),
+                CREATIVE_TRADING_SHOP.get());
+    }
+
+    private static ItemStackHandler createAutomationItemHandler(BlockEntity blockEntity) {
+        if (!(blockEntity instanceof BarteringBlockEntity barteringBlockEntity)) {
+            return null;
+        }
+        NonNullList<ItemStack> inventory = barteringBlockEntity.getInventory();
+        return new ItemStackHandler(inventory) {
+            @Override
+            public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+                boolean extractSaleStockMode = !barteringBlockEntity.usesItemCurrency()
+                        && barteringBlockEntity.supportsTradeDirectionToggle()
+                        && barteringBlockEntity.isBuyingFromPlayers();
+                return switch (slot) {
+                    case 0 ->
+                            !extractSaleStockMode && ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem()); // only sale item may be inserted
+                    case 1 ->
                                 false;                                                               // revenue slot never accepts input
-                        default -> false;
-                    };
-                }
+                    default -> false;
+                };
+            }
 
-                @Override
-                public ItemStack extractItem(int slot, int amount, boolean simulate) {
-                    if (!barteringBlockEntity.isExtractAllowed()) return ItemStack.EMPTY; // refuse
-                    if (slot == 1 && barteringBlockEntity.getCurrencyItemCount() > 0 && amount > 0) {
-                        int taken = Math.min(amount, barteringBlockEntity.getCurrencyItemCount());
-                        if (!simulate) {
-                            barteringBlockEntity.addCurrencyItems(-taken);
-                        }
-                        // todo; figure out the curreny...
-                        ItemStack out = barteringBlockEntity.getCurrencyItem().copy();
-                        out.setCount(taken);
-                        return out;
+            @Override
+            public ItemStack extractItem(int slot, int amount, boolean simulate) {
+                if (!barteringBlockEntity.isExtractAllowed()) return ItemStack.EMPTY; // refuse
+                boolean extractSaleStockMode = !barteringBlockEntity.usesItemCurrency()
+                        && barteringBlockEntity.supportsTradeDirectionToggle()
+                        && barteringBlockEntity.isBuyingFromPlayers();
+                if (slot == 0 && extractSaleStockMode && barteringBlockEntity.getSaleItemCount() > 0 && amount > 0) {
+                    int taken = Math.min(amount, barteringBlockEntity.getSaleItemCount());
+                    if (!simulate) {
+                        barteringBlockEntity.addSaleItems(-taken);
                     }
-                    return ItemStack.EMPTY;
+                    ItemStack out = barteringBlockEntity.getSaleItem().copy();
+                    out.setCount(taken);
+                    return out;
                 }
+                if (slot == 1 && barteringBlockEntity.usesItemCurrency() && barteringBlockEntity.getCurrencyItemCount() > 0 && amount > 0) {
+                    int taken = Math.min(amount, barteringBlockEntity.getCurrencyItemCount());
+                    if (!simulate) {
+                        barteringBlockEntity.addCurrencyItems(-taken);
+                    }
+                    ItemStack out = barteringBlockEntity.getCurrencyItem().copy();
+                    out.setCount(taken);
+                    return out;
+                }
+                return ItemStack.EMPTY;
+            }
 
-                @Override
-                public ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
-                    if (!barteringBlockEntity.isInsertAllowed()) return stack;
-                    if (slot == 0) {
-                        if (stack.isEmpty()) return ItemStack.EMPTY;
-                        if (barteringBlockEntity.getSaleItem().isEmpty() || !ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem()))
-                            return stack;
-                        int free = barteringBlockEntity.getFreeSlots();
-                        if (free <= 0) return stack;            // stock full
+            @Override
+            public ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
+                boolean extractSaleStockMode = !barteringBlockEntity.usesItemCurrency()
+                        && barteringBlockEntity.supportsTradeDirectionToggle()
+                        && barteringBlockEntity.isBuyingFromPlayers();
+                if (!barteringBlockEntity.isInsertAllowed() || barteringBlockEntity.hasUnlimitedStock()) return stack;
+                if (slot == 0) {
+                    if (extractSaleStockMode) return stack;
+                    if (stack.isEmpty()) return ItemStack.EMPTY;
+                    if (barteringBlockEntity.getSaleItem().isEmpty() || !ItemStack.isSameItem(stack, barteringBlockEntity.getSaleItem()))
+                        return stack;
+                    int free = barteringBlockEntity.getFreeSlots();
+                    if (free <= 0) return stack;            // stock full
 
-                        int toInsert = Math.min(free, stack.getCount());
-                        if (!simulate) {
-                            barteringBlockEntity.addSaleItems(toInsert);
-                        }
-
-                        return stack.copyWithCount(stack.getCount() - toInsert);
+                    int toInsert = Math.min(free, stack.getCount());
+                    if (!simulate) {
+                        barteringBlockEntity.addSaleItems(toInsert);
                     }
 
-                    return stack;
-
+                    return stack.copyWithCount(stack.getCount() - toInsert);
                 }
-            };
-        }, BARTERING_STATION.get());
+
+                return stack;
+
+            }
+        };
     }
 
 
@@ -199,7 +269,6 @@ public class Shoppy {
         registrar.playToServer(StockTransferPayload.TYPE, StockTransferPayload.STREAM_CODEC, ServerPayloadHandler::handle);
         registrar.playToServer(ToggleAutomationPayload.TYPE, ToggleAutomationPayload.STREAM_CODEC, ServerPayloadHandler::handle);
     }
-
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
 

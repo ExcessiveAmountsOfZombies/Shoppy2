@@ -17,7 +17,7 @@ import static com.epherical.shoppy.Shoppy.MODID;
  */
 public record ToggleAutomationPayload(BlockPos pos, Target target) implements CustomPacketPayload {
 
-    public enum Target { INSERT, EXTRACT }
+    public enum Target { INSERT, EXTRACT, TRADE_MODE }
 
     public static final Type<ToggleAutomationPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(MODID, "toggle_automation"));

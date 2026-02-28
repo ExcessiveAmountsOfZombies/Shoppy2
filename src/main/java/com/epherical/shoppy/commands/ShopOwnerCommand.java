@@ -41,16 +41,16 @@ public final class ShopOwnerCommand {
         BlockEntity be = level.getBlockEntity(pos);
 
         if (!(be instanceof Ownable ownable)) {
-            ctx.getSource().sendFailure(Component.literal("No ownable shop at " + pos));
+            ctx.getSource().sendFailure(Component.translatable("command.shoppy.shopowner.no_ownable_at", pos.toShortString()));
             return 0;
         }
 
         if (toPlayer) {
             ownable.setOwner(ctx.getSource().getPlayerOrException().getUUID());
-            ctx.getSource().sendSuccess(() -> Component.literal("Owner set to you"), true);
+            ctx.getSource().sendSuccess(() -> Component.translatable("command.shoppy.shopowner.owner_set_self"), true);
         } else {
             ownable.setOwner(Util.NIL_UUID);
-            ctx.getSource().sendSuccess(() -> Component.literal("Owner cleared"), true);
+            ctx.getSource().sendSuccess(() -> Component.translatable("command.shoppy.shopowner.owner_cleared"), true);
         }
         be.setChanged();
         return 1;

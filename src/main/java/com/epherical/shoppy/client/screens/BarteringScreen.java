@@ -32,6 +32,9 @@ public class BarteringScreen extends AbstractContainerScreen<BarteringMenu> {
     private static final int ITEM_SIZE = 16;
 
 
+    public static final int TRADE_POSITION = 95;
+
+
     private static final int CURRENCY_ITEM_X  = 111;
     private static final int CURRENCY_ITEM_Y  = 133;
 
@@ -49,8 +52,14 @@ public class BarteringScreen extends AbstractContainerScreen<BarteringMenu> {
     protected void init() {
         super.init();
         bartering = (BarteringBlockEntity) minecraft.level.getBlockEntity(menu.getBlockPos());
+        if (bartering == null) {
+            return;
+        }
         for (int i = 0; i < 3; i++) {
-            if (bartering.getSaleCount(i) == 0 && bartering.getCostCount(i) == 0) continue;  // nothing to show
+            boolean hasPrice = bartering.usesItemCurrency()
+                    ? bartering.getCostCount(i) > 0
+                    : bartering.getOfferPrice(i) > 0.0D;
+            if (bartering.getSaleCount(i) == 0 && !hasPrice) continue;  // nothing to show
 
             int y = topPos + ROW_START_Y + i * ROW_HEIGHT;
             int x = leftPos + ROW_PAD_X - 2;
@@ -70,6 +79,11 @@ public class BarteringScreen extends AbstractContainerScreen<BarteringMenu> {
         int left = leftPos;
         int top = topPos;
         if (bartering != null) {
+            if (bartering.supportsTradeDirectionToggle()) {
+                graphics.drawString(this.font,
+                        Component.translatable(bartering.isBuyingFromPlayers() ? "shop.status.buying" : "shop.status.selling"),
+                        left + 8, top + TRADE_POSITION, 0xFFFFFF);
+            }
             ItemStack saleStack = bartering.getSaleItem();
             if (!saleStack.isEmpty()) {
                 int x = left + CURRENCY_ITEM_X;
@@ -107,7 +121,7 @@ public class BarteringScreen extends AbstractContainerScreen<BarteringMenu> {
                                             ? TooltipFlag.Default.ADVANCED
                                             : TooltipFlag.Default.NORMAL);
 
-                    lines.add(Component.translatable("tooltip.shoppy.currency_item")
+                    lines.add(Component.translatable("tooltip.shoppy.taken_item")
                             .withStyle(ChatFormatting.GRAY));
                     graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
                 }
@@ -117,9 +131,6 @@ public class BarteringScreen extends AbstractContainerScreen<BarteringMenu> {
                 graphics.renderItemDecorations(this.font, currencyStack, x, y);
             }
         }
-
-
-
     }
 
     @Override

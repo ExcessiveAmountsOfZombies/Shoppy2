@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "G#G",
+    "WCW",
+    "OSO"
+  ],
+  "key": {
+    "#": {
+      "item": "minecraft:glass"
+    },
+    "W": {
+      "tag": "minecraft:wool_carpets"
+    },
+    "C": {
+      "item": "minecraft:chest"
+    },
+    "O": {
+      "item": "minecraft:oak_log"
+    },
+    "S": {
+      "item": "minecraft:smooth_stone"
+    },
+    "G": {
+      "item": "minecraft:emerald"
+    }
+  },
+  "result": {
+    "id": "shoppy:trading_shop",
+    "count": 1
+  }
+}

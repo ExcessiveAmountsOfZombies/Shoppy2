@@ -1,0 +1,110 @@
+{
+  "itemGroup.shoppy.shoppy": "Shoppy",
+  "itemGroup.shoppy": "Shoppy",
+
+  "block.shoppy.bartering_station": "Estação de Escambo",
+  "block.shoppy.creative_bartering_station": "Estação de Escambo Criativa",
+  "block.shoppy.trading_shop": "Loja de Trocas",
+  "block.shoppy.creative_trading_shop": "Loja de Trocas Criativa",
+  "block.shoppy.shop_block": "Bloco de Loja",
+  "block.shoppy.creative_shop_block": "Bloco de Loja Criativo",
+
+  "barter.purchase.no_held_item": "Parece que você não tem os itens necessários para trocar com a loja. Certifique-se de estar segurando o item.",
+  "barter.purchase.not_enough_items": "Você não tem itens suficientes para concluir a troca. (Necessário: %s, tinha: %s)",
+  "barter.purchase.transaction_success": "Você comprou %s.",
+  "barter.purchase.owner.transaction_success": "%s comprou %s da sua estação de escambo.",
+  "barter.purchase.shop_empty": "Esta estação de escambo está vazia.",
+  "barter.purchase.owner.shop_empty": "Sua estação de escambo em %s está vazia.",
+  "barter.purchase.currency_full": "Você não pode comprar nesta estação de escambo, pois ela não pode armazenar mais %s.",
+  "barter.purchase.owner.currency_full": "Sua estação de escambo em %s está cheia de %s e não pode receber mais trocas.",
+
+  "barter.information.owner.extraction": "Para retirar seus lucros, agache-se enquanto bate no bloco. Depois que os lucros forem retirados, os itens podem ser removidos da mesma forma.",
+  "barter.information.owner.profits": "Esta loja contém %s item(ns) de lucro.",
+  "barter.information.owner.barter": "e %s itens para serem vendidos.",
+
+  "barter.information.user.selling_info": "Esta loja está vendendo %s %s por %s %s.",
+
+  "barter.setup.owner.add_currency": "Moeda definida para %s nesta estação de escambo. Para limpar, agache-se e clique com o botão direito na estação. Isso também soltará quaisquer itens armazenados nela.",
+  "barter.setup.owner.add_selling": "Venda definida para %s nesta estação de escambo. Para limpar, agache-se e clique com o botão direito na estação. Isso também soltará quaisquer itens armazenados nela.",
+  "barter.setup.owner.add_currency_fail": "Você não pode definir",
+
+  "shop.purchase.no_account": "As contas necessárias para a loja parecem estar ausentes, então a transação não pode ser concluída. Avisar os administradores?",
+  "shop.purchase.no_held_item": "Parece que você não tem os itens necessários para trocar com a loja. Certifique-se de estar segurando o item.",
+  "shop.purchase.not_enough_money": "Você não tem dinheiro suficiente para comprar nesta loja.",
+  "shop.purchase.transaction_success": "Você comprou %s.",
+  "shop.purchase.owner.transaction_success": "%s comprou %s da sua loja.",
+  "shop.purchase.shop_empty": "Esta loja está vazia.",
+  "shop.purchase.owner.shop_empty": "Sua loja em %s está vazia.",
+
+  "shop.buying.full": "Não há espaço suficiente nesta loja.",
+  "shop.buying.no_held_item": "Você deve segurar o item que deseja vender, e ele precisa ser o mesmo item.",
+  "shop.buying.not_enough_funds": "O dono da loja não tem dinheiro suficiente para comprar de você.",
+  "shop.buying.not_enough_items": "Você precisa ter itens suficientes na mão para vender para a loja.",
+  "shop.buying.player.success": "Você vendeu %s por %s.",
+  "shop.buying.owner.success": "%s vendeu %s para você por %s.",
+
+  "shop.information.owner.info": "O Bloco de Loja interage com uma moeda e a deposita diretamente na sua conta de jogador.",
+  "shop.information.owner.info2": "e a deposita diretamente na sua conta de jogador.",
+  "shop.information.owner.insert": "Para inserir itens na loja, clique com o botão direito na vitrine de vidro.",
+  "shop.information.owner.reset": "Se já houver um item ali, você terá que limpar com shift + clique direito primeiro.",
+  "shop.information.owner.update": "Para alternar entre compra e venda, agache-se e clique com o botão direito na placa de madeira da loja.",
+  "shop.information.owner.pricing": "Para alterar o preço da loja, clique com o botão direito na placa de madeira \n da loja e então digite um número no chat.\n Sua próxima mensagem não será enviada para ninguém no servidor.",
+  "shop.information.owner.contents": "Esta loja %s %s e está armazenando %s itens.",
+
+  "shop.information.user.selling_info": "Esta loja está vendendo %s %s por %s.",
+  "shop.information.user.buying_info": "Esta loja está comprando %s %s por %s.",
+
+  "shop.pricing.owner.update": "Você agora está atualizando o preço da sua loja. Sua próxima mensagem no chat NÃO será enviada aos jogadores. Certifique-se de inserir um número para atualizar o preço.",
+  "shop.pricing.owner.update_complete": "Você definiu o preço da sua loja para %s.",
+  "shop.pricing.owner.update_fail": "Você não inseriu um número válido para atualizar o preço da sua loja. Você inseriu: %s",
+
+  "shop.status.update": "Esta loja agora está definida para: %s.",
+  "shop.status.selling": "Vendendo",
+  "shop.status.buying": "Comprando",
+
+  "shop.status.buy": "Compra",
+  "shop.status.sell": "Vende",
+
+  "shop.setup.owner.add_selling": "Esta loja agora venderá %s para os jogadores.",
+  "shop.setup.owner.add_buying": "Esta loja agora comprará %s dos jogadores.",
+
+  "shop.error.no_economy": "Não há um mod de economia compatível instalado. Interação encerrada.",
+
+  "common.purchase.full_inventory": "Você não pode negociar com o inventário cheio.",
+  "common.station.message_for": "por",
+  "common.station.message_buying": "Comprando",
+  "common.station.message_selling": "Vendendo",
+
+  "screen.shoppy.add_price": "ADICIONAR PREÇO",
+  "screen.shoppy.set_item": "RECEBENDO",
+  "screen.shoppy.set_sold": "VENDENDO",
+  "screen.shoppy.set_traded": "NEGOCIANDO",
+  "tooltip.shoppy.taken_item": "Você me dá estes.",
+  "tooltip.shoppy.sale_item": "Eu vou te dar estes.",
+  "tooltip.shoppy.stock_item": "Clique esquerdo para inserir, clique direito para extrair.",
+  "tooltip.shoppy.sale_stock": "Estoque Atual",
+  "screen.shoppy.confirm": "Confirmar",
+  "message.shoppy.cannot_change_items_with_stock": "Você deve esvaziar a loja antes de alterar qualquer item.",
+
+  "tooltip.shoppy.insert_enabled": "Inserção Ativada",
+  "tooltip.shoppy.insert_disabled": "Inserção Desativada",
+  "tooltip.shoppy.extract_enabled": "Extração Ativada",
+  "tooltip.shoppy.extract_disabled": "Extração Desativada",
+  "tooltip.shoppy.price_item": "Preço -- Quantidade de itens exigida do comprador.",
+  "tooltip.shoppy.price_money": "Preço -- Quantia de moeda exigida do comprador.",
+  "tooltip.shoppy.received": "Recebido -- O que o jogador receberá em troca de pagar o preço do item.",
+  "tooltip.shoppy.submit_pricing": "Enviar preço.",
+  "screen.shoppy.price": "Preço",
+  "screen.shoppy.received": "Recebido",
+  "text.shoppy.money_value": "%s",
+
+  "message.shoppy.currency_item_unsupported": "Esta loja usa moeda de conta e não aceita item como moeda.",
+  "message.shoppy.set_currency_item_success": "Item de moeda definido com sucesso.",
+  "message.shoppy.set_sale_item_success": "Item de venda definido com sucesso.",
+
+  "command.shoppy.shopowner.no_ownable_at": "Nenhuma loja com dono em %s.",
+  "command.shoppy.shopowner.owner_set_self": "Dono definido para você.",
+  "command.shoppy.shopowner.owner_cleared": "Dono removido.",
+
+  "economy.shoppy.admin_user": "Admin"
+}

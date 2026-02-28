@@ -79,11 +79,16 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         }
     };
 
-    /* put anywhere inside the class */
     public void setOffer(int idx, int cost, int sale) {
-        if (idx < 0 || idx >= saleCounts.length) return;
-        costCounts[idx] = cost;
-        saleCounts[idx] = sale;
+        setOffer(idx, (double) cost, sale);
+    }
+
+    public void setOffer(int idx, double cost, int sale) {
+        if (idx < 0 || idx >= saleCounts.length) {
+            return;
+        }
+        costCounts[idx] = Math.max(0, (int) Math.round(cost));
+        saleCounts[idx] = Math.max(0, sale);
     }
 
     public BarteringBlockEntity(BlockPos pos, BlockState state) {
@@ -102,7 +107,8 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         int costQty = costCounts[offerIdx];
 
         if (saleQty <= 0 || costQty <= 0) return;
-        if (getSaleItemCount() < saleQty) return;
+        if (!hasUnlimitedStock() && getSaleItemCount() < saleQty) return;
+        if (currency.isEmpty()) return;
 
 
         ItemStack currencyTemplate = new ItemStack(currency.getItem());
@@ -136,6 +142,10 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         addCurrencyItems(costQty);
 
         setChanged();
+    }
+
+    public void handleTradeAttempt(Player player, int offerIdx) {
+        tryPurchase(player, offerIdx);
     }
 
 
@@ -187,7 +197,7 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         }
     }
 
-    private void writeNBT(CompoundTag tag, HolderLookup.Provider registries) {
+    protected void writeNBT(CompoundTag tag, HolderLookup.Provider registries) {
         // ContainerHelper.saveAllItems(tag, inventory, registries);   // no longer used for counts
 
         if (!saleItem.isEmpty()) tag.put("SaleItem", saleItem.save(registries));
@@ -206,7 +216,7 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         if (!owner.equals(Util.NIL_UUID)) tag.putUUID("Owner", owner);
     }
 
-    private void readNBT(CompoundTag tag, HolderLookup.Provider registries) {
+    protected void readNBT(CompoundTag tag, HolderLookup.Provider registries) {
 
         if (tag.contains("SaleItem"))
             saleItem = ItemStack.parse(registries, tag.getCompound("SaleItem")).orElse(ItemStack.EMPTY);
@@ -324,6 +334,14 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
         return costCounts[idx];
     }
 
+    public double getOfferPrice(int idx) {
+        return getCostCount(idx);
+    }
+
+    public String getOfferPriceText(int idx) {
+        return String.valueOf(getCostCount(idx));
+    }
+
     public int getStock() {
         return saleItemCount;
     }
@@ -350,6 +368,31 @@ public class BarteringBlockEntity extends BlockEntity implements Nameable, MenuP
 
     public void setAllowExtract(boolean value) {
         allowExtract = value;
+    }
+
+    public boolean usesItemCurrency() {
+        return true;
+    }
+
+    public boolean hasUnlimitedStock() {
+        return false;
+    }
+
+    public boolean supportsTradeDirectionToggle() {
+        return false;
+    }
+
+    public boolean isBuyingFromPlayers() {
+        return false;
+    }
+
+    public void setBuyingFromPlayers(boolean value) {
+    }
+
+    public void toggleTradeDirection() {}
+
+    public Component currentModeLabel() {
+        return Component.translatable(this.isBuyingFromPlayers() ? "shop.status.buying" : "shop.status.selling");
     }
 
 

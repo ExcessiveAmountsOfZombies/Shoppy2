@@ -23,12 +23,10 @@ import java.util.function.IntConsumer;
  */
 public class RowButton extends AbstractWidget {
 
-    /* ---- layout constants (copy of BarteringScreen’s values) ---- */
     private static final int ITEM_SIZE   = 16;
     private static final int TEXT_Y_OFF  = 6;
     private static final int ROW_PAD_X   = 8;
 
-    /* confirmation button */
     private static final int CONFIRM_W   = 52;
     private static final int CONFIRM_H   = 16;
 
@@ -36,7 +34,6 @@ public class RowButton extends AbstractWidget {
     private final int offerIndex;
     private final IntConsumer confirmAction;
 
-    /* runtime state ------------------------------------------------------ */
     private boolean awaitingConfirm = false;
 
     public RowButton(int x, int y, int width, int height,
@@ -49,10 +46,6 @@ public class RowButton extends AbstractWidget {
         this.bartering      = bartering;
         this.confirmAction  = confirmAction;
     }
-
-    /* ------------------------------------------------------------------ */
-    /*  Rendering                                                         */
-    /* ------------------------------------------------------------------ */
 
     @Override
     protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
@@ -74,28 +67,37 @@ public class RowButton extends AbstractWidget {
         ItemStack saleItem = bartering.getSaleItem();
         int saleCnt        = bartering.getSaleCount(offerIndex);
         if (!saleItem.isEmpty()) {
-            g.renderItem(saleItem, getX() + ROW_PAD_X, getY() + 1);
+            g.renderItem(saleItem, getX() - 5 + ROW_PAD_X, getY() + 1);
             g.drawString(Minecraft.getInstance().font, String.valueOf(saleCnt),
-                    getX() + ROW_PAD_X + ITEM_SIZE + 4, getY() + TEXT_Y_OFF, 0xFFFFFF, false);
+                    getX() - 8 + ROW_PAD_X + ITEM_SIZE + 4, getY() + TEXT_Y_OFF, 0xFFFFFF, false);
 
             if (isHovering(mouseX, mouseY, getX() + ROW_PAD_X, getY() + 1)) {
-                showTooltip(g, mouseX, mouseY, saleItem,
-                        Component.translatable("tooltip.shoppy.sale_item"));
+                if (bartering.isBuyingFromPlayers()) {
+                    showTooltip(g, mouseX, mouseY, saleItem,
+                            Component.translatable("tooltip.shoppy.taken_item"));
+                } else {
+                    showTooltip(g, mouseX, mouseY, saleItem,
+                            Component.translatable("tooltip.shoppy.sale_item"));
+                }
             }
         }
 
         ItemStack curItem   = bartering.getCurrencyItem();
         int costCnt         = bartering.getCostCount(offerIndex);
-        if (!curItem.isEmpty()) {
-            int curX = getX() + width - ITEM_SIZE - 40;
+        if (bartering.usesItemCurrency() && !curItem.isEmpty()) {
+            int curX = getX() + width - ITEM_SIZE - 36;
             g.renderItem(curItem, curX, getY() + 1);
             g.drawString(Minecraft.getInstance().font, String.valueOf(costCnt),
                     curX + ITEM_SIZE + 4, getY() + TEXT_Y_OFF, 0xFFFFFF, false);
 
             if (isHovering(mouseX, mouseY, curX, getY() + 1)) {
                 showTooltip(g, mouseX, mouseY, curItem,
-                        Component.translatable("tooltip.shoppy.currency_item"));
+                        Component.translatable("tooltip.shoppy.taken_item"));
             }
+        } else {
+            String priceText = bartering.getOfferPriceText(offerIndex);
+            int textX = 5 + getX() + width - ROW_PAD_X - Minecraft.getInstance().font.width(priceText);
+            g.drawString(Minecraft.getInstance().font, priceText, textX, getY() + TEXT_Y_OFF, 0xFFFFFF, false);
         }
     }
 
@@ -116,10 +118,6 @@ public class RowButton extends AbstractWidget {
                 btnY + 4, 0xFFFFFF, false);
     }
 
-    /* ------------------------------------------------------------------ */
-    /*  Interaction                                                       */
-    /* ------------------------------------------------------------------ */
-
     @Override
     public void onClick(double mouseX, double mouseY) {
         if (awaitingConfirm) {
@@ -138,10 +136,6 @@ public class RowButton extends AbstractWidget {
         return mouseX >= btnX && mouseX < btnX + CONFIRM_W
             && mouseY >= btnY && mouseY < btnY + CONFIRM_H;
     }
-
-    /* ------------------------------------------------------------------ */
-    /*  Helpers                                                           */
-    /* ------------------------------------------------------------------ */
 
     private static boolean isHovering(int mouseX, int mouseY, int x, int y) {
         return mouseX >= x && mouseX < x + ITEM_SIZE

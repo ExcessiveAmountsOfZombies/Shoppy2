@@ -10,6 +10,13 @@ group = mod_group_id
 
 repositories {
     mavenLocal()
+
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
 }
 
 base {
@@ -96,6 +103,11 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 
 dependencies {
+    implementation "curse.maven:ftb-chunks-forge-314906:7157142"
+    implementation "curse.maven:ftb-teams-forge-404468:7315210"
+    implementation "curse.maven:architectury-api-419699:5786327"
+    implementation "curse.maven:ftb-library-forge-404465:7312258"
+    compileOnly "curse.maven:eightseconomyp-559967:7692400"
     // Example mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"

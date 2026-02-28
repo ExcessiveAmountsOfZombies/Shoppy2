@@ -1,7 +1,6 @@
 package com.epherical.shoppy.network;
 
 import com.epherical.shoppy.block.entity.BarteringBlockEntity;
-import com.epherical.shoppy.block.entity.CreativeBarteringBlockEntity;
 import com.epherical.shoppy.menu.bartering.BarteringMenu;
 import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
 import com.epherical.shoppy.network.payloads.AddItemRequestPayload;
@@ -68,18 +67,22 @@ public class ServerPayloadHandler {
 
             ItemStack copy = payload.stack().copyWithCount(1);
 
-            if ((bbe.getSaleItemCount() > 0 || bbe.getCurrencyItemCount() > 0) && !(bbe instanceof CreativeBarteringBlockEntity)) {
+            if ((bbe.getSaleItemCount() > 0 || bbe.getCurrencyItemCount() > 0) && !bbe.hasUnlimitedStock()) {
                 player.sendSystemMessage(Component.translatable(
                         "message.shoppy.cannot_change_items_with_stock"));
                 return;
             }
 
             if (payload.currency()) {
+                if (!bbe.usesItemCurrency()) {
+                    player.sendSystemMessage(Component.translatable("message.shoppy.currency_item_unsupported"));
+                    return;
+                }
                 bbe.setCurrency(copy);
-                player.sendSystemMessage(Component.literal("Set the currency item successfully"));
+                player.sendSystemMessage(Component.translatable("message.shoppy.set_currency_item_success"));
             } else {
                 bbe.setSaleItem(copy);
-                player.sendSystemMessage(Component.literal("Set the sale item successfully"));
+                player.sendSystemMessage(Component.translatable("message.shoppy.set_sale_item_success"));
             }
             bbe.setChanged();
 
@@ -114,7 +117,7 @@ public class ServerPayloadHandler {
         if (!bbe.getOwner().equals(player.getUUID()))
             return;                      // todo; log
 
-        if (payload.price() == 0)
+        if (payload.price() <= 0.0D)
             return;                       // todo; send to player about bad submission
 
         if (payload.received() == 0) {
@@ -150,7 +153,7 @@ public class ServerPayloadHandler {
         if (be == null) return;
         // todo; dont let owner purhcase
 
-        be.tryPurchase(player, idx);
+        be.handleTradeAttempt(player, idx);
 
         broadcastUpdate(be, player);
 
@@ -173,6 +176,14 @@ public class ServerPayloadHandler {
 
         if (!saleSide && inserting) {
             return;  // we don't want the owner inserting into
+        }
+
+        if (!shop.usesItemCurrency() && !saleSide) {
+            return;
+        }
+
+        if (inserting && shop.hasUnlimitedStock()) {
+            return;
         }
 
 
@@ -231,6 +242,14 @@ public class ServerPayloadHandler {
         switch (payload.target()) {
             case INSERT  -> shop.setAllowInsert(!shop.isInsertAllowed());
             case EXTRACT -> shop.setAllowExtract(!shop.isExtractAllowed());
+            case TRADE_MODE -> {
+                if (!shop.supportsTradeDirectionToggle()) {
+                    return;
+                }
+                shop.toggleTradeDirection();
+                player.sendSystemMessage(Component.translatable("shop.status.update",
+                        Component.translatable(shop.isBuyingFromPlayers() ? "shop.status.buying" : "shop.status.selling")));
+            }
         }
 
         shop.setChanged();

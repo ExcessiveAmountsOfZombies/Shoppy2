@@ -4,6 +4,8 @@
 
   "block.shoppy.bartering_station": "Bartering Station",
   "block.shoppy.creative_bartering_station": "Creative Bartering Station",
+  "block.shoppy.trading_shop": "Trading Shop",
+  "block.shoppy.creative_trading_shop": "Creative Trading Shop",
   "block.shoppy.shop_block": "Shop Block",
   "block.shoppy.creative_shop_block": "Creative Shop Block",
 
@@ -57,8 +59,8 @@
   "shop.pricing.owner.update_fail": "You did not enter a valid number to update your shops pricing. You entered: %s",
 
   "shop.status.update": "This shop is now set to: %s.",
-  "shop.status.selling": "Sell to players",
-  "shop.status.buying": "Buy from players",
+  "shop.status.selling": "Selling",
+  "shop.status.buying": "Buying",
 
   "shop.status.buy": "Buys",
   "shop.status.sell": "Sells",
@@ -78,8 +80,10 @@
   "screen.shoppy.add_price": "ADD PRICE",
   "screen.shoppy.set_item": "TAKING",
   "screen.shoppy.set_sold": "SELLING",
-  "tooltip.shoppy.currency_item": "You give me these.",
+  "screen.shoppy.set_traded": "TRADING",
+  "tooltip.shoppy.taken_item": "You give me these.",
   "tooltip.shoppy.sale_item": "I will give you these.",
+  "tooltip.shoppy.stock_item": "Left click to insert, right click to extract.",
   "tooltip.shoppy.sale_stock": "Current Stock",
   "screen.shoppy.confirm": "Confirm",
   "message.shoppy.cannot_change_items_with_stock": "You must empty the shop before changing any items.",
@@ -87,5 +91,22 @@
   "tooltip.shoppy.insert_enabled": "Insertion Enabled",
   "tooltip.shoppy.insert_disabled": "Insertion Disabled",
   "tooltip.shoppy.extract_enabled": "Extract Enabled",
-  "tooltip.shoppy.extract_disabled": "Extract Disabled"
+  "tooltip.shoppy.extract_disabled": "Extract Disabled",
+  "tooltip.shoppy.price_item": "Price -- Item count required from the buyer.",
+  "tooltip.shoppy.price_money": "Price -- Currency amount required from the buyer.",
+  "tooltip.shoppy.received": "Received -- What the player will get in return for giving you the price of the item.",
+  "tooltip.shoppy.submit_pricing": "Submit the pricing.",
+  "screen.shoppy.price": "Price",
+  "screen.shoppy.received": "Received",
+  "text.shoppy.money_value": "%s",
+
+  "message.shoppy.currency_item_unsupported": "This shop uses account currency and does not accept an item currency.",
+  "message.shoppy.set_currency_item_success": "Set the currency item successfully.",
+  "message.shoppy.set_sale_item_success": "Set the sale item successfully.",
+
+  "command.shoppy.shopowner.no_ownable_at": "No ownable shop at %s.",
+  "command.shoppy.shopowner.owner_set_self": "Owner set to you.",
+  "command.shoppy.shopowner.owner_cleared": "Owner cleared.",
+
+  "economy.shoppy.admin_user": "Admin"
 }

@@ -1,6 +1,9 @@
 {
   "replace": false,
   "values": [
-    "shoppy:bartering_station"
+    "shoppy:bartering_station",
+    "shoppy:creative_bartering_station",
+    "shoppy:trading_shop",
+    "shoppy:creative_trading_shop"
   ]
 }

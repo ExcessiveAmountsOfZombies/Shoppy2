@@ -9,6 +9,7 @@ import com.epherical.shoppy.menu.bartering.BarteringMenuOwner;
 import com.epherical.shoppy.network.payloads.AddItemRequestPayload;
 import com.epherical.shoppy.network.payloads.PriceSubmissionPayload;
 import com.epherical.shoppy.network.payloads.StockTransferPayload;
+import com.epherical.shoppy.network.payloads.ToggleAutomationPayload;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -17,6 +18,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.epherical.shoppy.Shoppy.MODID;
+import static com.epherical.shoppy.client.screens.BarteringScreen.TRADE_POSITION;
 
 public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuOwner> {
 
@@ -46,6 +49,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
 
     private EditBox priceField;
     private EditBox receivedField;
+    private Button modeButton;
 
 
     private BarteringBlockEntity bartering;
@@ -67,6 +71,9 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
         super.init();
 
         bartering = (BarteringBlockEntity) minecraft.level.getBlockEntity(menu.getBlockPos());
+        if (bartering == null) {
+            return;
+        }
 
         int toggleX = leftPos + imageWidth - 66;
         int toggleY = topPos + 5;
@@ -75,6 +82,16 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
         int insertX = leftPos + imageWidth - 49;
         int insertY = topPos + 5;
         addRenderableWidget(new InsertToggleButton(insertX, insertY, bartering));
+
+        if (bartering.supportsTradeDirectionToggle()) {
+            int modeX = leftPos + 8;
+            int modeY = topPos + TRADE_POSITION;
+            modeButton = addRenderableWidget(Button.builder(bartering.currentModeLabel(), button -> {
+                PacketDistributor.sendToServer(new ToggleAutomationPayload(bartering.getBlockPos(), ToggleAutomationPayload.Target.TRADE_MODE));
+                bartering.toggleTradeDirection();
+                button.setMessage(bartering.currentModeLabel());
+            }).size(95, 14).pos(modeX, modeY).build());
+        }
 
         int rows = populatedRows();
         int btnX = leftPos + (imageWidth - 150) / 2;
@@ -90,25 +107,34 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
 
         if (getMenu().isEditing()) {
 
-            priceField = this.addRenderableWidget(new EditBox(minecraft.font, btnX + 24, btnY + 2, 30, 14, Component.literal("Price")));
-            priceField.setTooltip(Tooltip.create(Component.literal("Price -- The price that the player must pay to 'receive' any items.")));
-            receivedField = this.addRenderableWidget(new EditBox(minecraft.font, btnX - 8, btnY + 2, 30, 14, Component.literal("Received")));
-            receivedField.setTooltip(Tooltip.create(Component.literal("Received -- What the player will get in return for giving you the price of the item.")));
-            Checkbox checkbox1 = this.addRenderableWidget(Checkbox.builder(Component.literal(""), minecraft.font)
+            priceField = this.addRenderableWidget(new EditBox(minecraft.font, btnX + 24, btnY + 2, 30, 14, Component.translatable("screen.shoppy.price")));
+            priceField.setTooltip(Tooltip.create(Component.translatable(bartering.usesItemCurrency()
+                    ? "tooltip.shoppy.price_item"
+                    : "tooltip.shoppy.price_money")));
+            receivedField = this.addRenderableWidget(new EditBox(minecraft.font, btnX - 8, btnY + 2, 30, 14, Component.translatable("screen.shoppy.received")));
+            receivedField.setTooltip(Tooltip.create(Component.translatable("tooltip.shoppy.received")));
+            Checkbox checkbox1 = this.addRenderableWidget(Checkbox.builder(Component.empty(), minecraft.font)
                     .selected(true)
                     .pos(btnX + 30 + 25, btnY + 1)
                     .onValueChange((checkbox, value) -> submitOffer()).build());
-            checkbox1.setTooltip(Tooltip.create(Component.literal("Submit the pricing.")));
+            checkbox1.setTooltip(Tooltip.create(Component.translatable("tooltip.shoppy.submit_pricing")));
         }
 
         btnX = leftPos + (imageWidth - 150) / 2;
         btnY = topPos + 25;
 
-        addRenderableWidget(Button.builder(Component.translatable("screen.shoppy.set_item"), button -> {
-            minecraft.setScreen(new ShopPickingCreativeInventoryScreen(minecraft.player, this.minecraft.player.connection.enabledFeatures(), false, true));
-        }).size(60, 14).pos(btnX + 98, btnY + 147 - 80).build());
 
-        addRenderableWidget(Button.builder(Component.translatable("screen.shoppy.set_sold"), button -> {
+        MutableComponent message = Component.translatable("screen.shoppy.set_sold");
+
+        if (bartering.usesItemCurrency()) {
+            addRenderableWidget(Button.builder(Component.translatable("screen.shoppy.set_item"), button -> {
+                minecraft.setScreen(new ShopPickingCreativeInventoryScreen(minecraft.player, this.minecraft.player.connection.enabledFeatures(), false, true));
+            }).size(60, 14).pos(btnX + 98, btnY + 147 - 80).build());
+            message = Component.translatable("screen.shoppy.set_traded");
+        }
+
+
+        addRenderableWidget(Button.builder(message, button -> {
             minecraft.setScreen(new ShopPickingCreativeInventoryScreen(minecraft.player, this.minecraft.player.connection.enabledFeatures(), false, false));
         }).size(60, 14).pos(btnX + 98, btnY + 147 - 14 - 80).build());
 
@@ -121,23 +147,25 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                     PacketDistributor.sendToServer(
                             new StockTransferPayload(bartering.getBlockPos(), true, insert));
 
-                }, Component.translatable("tooltip.shoppy.sale_item")
+                }, Component.translatable("tooltip.shoppy.stock_item")
                 .withStyle(ChatFormatting.GRAY));
         addRenderableWidget(saleIcon);
 
 
-        ShopItemWidget currencyIcon = new ShopItemWidget(
-                leftPos + CURRENCY_ITEM_X,
-                topPos + CURRENCY_ITEM_Y - 72,
-                bartering::getCurrencyItem,
-                () -> menu.getContainerData().get(1),
-                button -> PacketDistributor.sendToServer(
-                        new StockTransferPayload(bartering.getBlockPos(), false, false)),
-                Component.translatable("tooltip.shoppy.currency_item")
-                        .withStyle(ChatFormatting.GRAY)   // extra tooltip line
-        );
+        if (bartering.usesItemCurrency()) {
+            ShopItemWidget currencyIcon = new ShopItemWidget(
+                    leftPos + CURRENCY_ITEM_X,
+                    topPos + CURRENCY_ITEM_Y - 72,
+                    bartering::getCurrencyItem,
+                    () -> menu.getContainerData().get(1),
+                    button -> PacketDistributor.sendToServer(
+                            new StockTransferPayload(bartering.getBlockPos(), false, false)),
+                    Component.translatable("tooltip.shoppy.taken_item")
+                            .withStyle(ChatFormatting.GRAY)   // extra tooltip line
+            );
 
-        addRenderableWidget(currencyIcon);
+            addRenderableWidget(currencyIcon);
+        }
 
 
     }
@@ -150,10 +178,14 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
         this.renderTooltip(graphics, pMouseX, pMouseY);
 
         if (bartering != null) {
+            if (modeButton != null) {
+                modeButton.setMessage(bartering.currentModeLabel());
+            }
             for (int i = 0; i < 3; i++) {
                 int saleCnt = bartering.getSaleCount(i);
                 int costCnt = bartering.getCostCount(i);
-                if (saleCnt == 0 && costCnt == 0) continue;
+                boolean hasPrice = bartering.usesItemCurrency() ? costCnt > 0 : bartering.getOfferPrice(i) > 0.0D;
+                if (saleCnt == 0 && !hasPrice) continue;
 
                 int rowY = topPos + ROW_START_Y + i * ROW_HEIGHT;
 
@@ -177,15 +209,21 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                                                 ? TooltipFlag.Default.ADVANCED
                                                 : TooltipFlag.Default.NORMAL);
 
-                        lines.add(Component.translatable("tooltip.shoppy.sale_item")
-                                .withStyle(ChatFormatting.GRAY));
+                        if (bartering.isBuyingFromPlayers()) {
+                            lines.add(Component.translatable("tooltip.shoppy.taken_item")
+                                    .withStyle(ChatFormatting.GRAY));
+                        } else {
+                            lines.add(Component.translatable("tooltip.shoppy.sale_item")
+                                    .withStyle(ChatFormatting.GRAY));
+                        }
+
                         graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
                     }
 
                 }
 
                 ItemStack curItem = bartering.getCurrencyItem();
-                if (!curItem.isEmpty()) {
+                if (bartering.usesItemCurrency() && !curItem.isEmpty()) {
                     int curX = right - ITEM_SIZE - 40;
                     graphics.renderItem(curItem, curX, rowY + 1);
                     graphics.drawString(minecraft.font, String.valueOf(costCnt),
@@ -200,10 +238,14 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
                                                 ? TooltipFlag.Default.ADVANCED
                                                 : TooltipFlag.Default.NORMAL);
 
-                        lines.add(Component.translatable("tooltip.shoppy.currency_item")
+                        lines.add(Component.translatable("tooltip.shoppy.taken_item")
                                 .withStyle(ChatFormatting.GRAY));
                         graphics.renderTooltip(this.font, lines, Optional.empty(), pMouseX, pMouseY);
                     }
+                } else {
+                    String priceText = bartering.getOfferPriceText(i);
+                    int textX = right - minecraft.font.width(priceText) - 2;
+                    graphics.drawString(minecraft.font, priceText, textX, rowY + TEXT_Y_OFF, 0xFFFFFF, false);
                 }
             }
         }
@@ -225,7 +267,7 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
 
 
     private void submitOffer() {
-        int price = safeParse(priceField.getValue());
+        double price = safeParseDouble(priceField.getValue());
         int received = safeParse(receivedField.getValue());
 
         var payload = new PriceSubmissionPayload(populatedRows(), price, received); // offerIndex 0; adjust as needed
@@ -240,11 +282,21 @@ public class BarteringScreenOwner extends AbstractContainerScreen<BarteringMenuO
         }
     }
 
+    private static double safeParseDouble(String txt) {
+        try {
+            return Double.parseDouble(txt.trim());
+        } catch (NumberFormatException ignored) {
+            return 0.0D;
+        }
+    }
+
     private int populatedRows() {
         if (bartering == null) return 0;
         int rows = 0;
         for (int i = 0; i < 3; i++)
-            if (bartering.getSaleCount(i) > 0 || bartering.getCostCount(i) > 0)
+            if (bartering.getSaleCount(i) > 0 || (bartering.usesItemCurrency()
+                    ? bartering.getCostCount(i) > 0
+                    : bartering.getOfferPrice(i) > 0.0D))
                 rows++;
         return rows;
     }
